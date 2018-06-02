@@ -1,0 +1,18 @@
+
+
+# OS generated files #
+######################
+*.DS_Store*
+
+# Data bases #
+##############
+data/*
+
+
+# Unpublished results #
+#######################
+results/*
+
+# Miscellaneous files #
+#######################
+*.swp
