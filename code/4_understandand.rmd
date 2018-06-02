@@ -1,0 +1,513 @@
+---
+title: "Heart Rate Variability and Psychosocial States"
+subtitle: "An Atherosclerotic Risk in Communities Study"
+author: 
+- Anish Shah, MD^[Department of Medicine, School of Medicine, Emory University]
+- Amit Shah, MD, MSCR^[Department of Epidemiology, Rollins School of Public Health, Emory University]
+data: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 10pt
+bibliography: aric.bib
+csl: american-medical-association.csl
+output: 
+  beamer_presentation:
+    highlight: tango
+    slide_level: 4
+	colortheme: "dolphin"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, global_options, include=FALSE}
+
+knitr::opts_chunk$set(
+  cache = TRUE,
+  warning = FALSE,
+  eval = TRUE,
+  echo = FALSE,
+  include = TRUE,
+  message = FALSE,
+  results = "asis",
+  dpi = 600,
+  dev = "png",
+  options("scipen" = 0, "digits" = 3)
+)
+```
+
+```{r}
+
+# Libraries
+source("1_libraries.R")
+
+# Data intake
+source("2_intake.R")
+
+# Tidy
+source("3_tidy.R")
+
+```
+
+# Understand
+
+## Introduction
+
+### Disclosures and Funding
+
+- Emory University
+- Atherosclerosis Risk in Communities Study
+- No conflicts of interest
+
+### Atherosclerosis Risk in Communities Study
+
+The ARIC study is a prospective epidemiologic study designed to investigate atherosclerosis and its clinical outcomes by cardiovascular risk factors, diseases, and demographics. It involved longitudinal follow-up over five visits from 1987 to 2013, with outcomes updated as of 2015, with over 15k initial participants. It collected measures of psychosocial stress (increased anger, increased vital exhaustion, decreased social support) and HRV over time.
+
+### Background
+
+Psychosocial stressors, such as fatigue and vital exhaustion, are repeatedly shown to be associated independently with MACE.[@Appels1988; @Bogle2018] Stressors and depression are shown to correlate with lower HRV.[@Huang2018; @Vroege2012; @Shah2013] The relationship between autonomic dysfunction and psychosocial stressors is still being studied.
+
+**Does psychosocial stressor impact HRV longitudinally, and does their interaction reflect increased cardiovascular mortality?**
+
+### Purpose
+
+Objectives:
+
+- Examine HRV from V1 and V4
+- Study the relationship of anger from V2 to V4
+- Cross-sectional relationship with vital exhaustion / social support at V2
+- Compare these factors with longitudinal outcomes
+
+Hypothesis:
+
+- increased stress will associate with lower HRV
+- changes in stress will associate with proportional changes in HRV
+- the interaction of lower HRV and higher stress will have increased risk of mortality
+  
+## Methods
+
+The data has been tidied up to this point. The current variables are...
+
+Variable | Description
+--- | ---
+demo | Overall sample description, including death
+cs2 | Prevalence of disease at V2
+cs4 | Prevalence of disease at V4
+hpa2 | ISEL and LSNS scores at V2
+hpb2 | Maastricht vital exhaustion at V2
+hpc2 | Spielberger Anger at V2
+hpc4 | Spielberger Anger at V4
+score_hp* | Numeric scaling of psychosocial scores
+hrv1 | 2-minute HRV data from V1
+hrv4 | 6-minute HRV data from V4
+
+# Report
+
+## Description
+
+The overall population should be described, but the at V2 and V4 they should be characterized by their exposure (the stressors). 
+
+
+### Population
+
+```{r}
+
+# THe initial population
+char_v1 <- 
+  compareGroups(~ GENDER + RACE + BMI + HTN + CHD + DIABETES, data = cs1) %>%
+  createTable(., type = 1, show.n = FALSE, hide.no = c("Absent"), digits = 0)
+
+# Plot the table
+export2md(char_v1)
+
+```
+
+
+### Psychosocial measures
+
+### Interpersonal support evaluation list (ISEL)
+
+The ISEL is scored from 0-3 points per question for 16-items, with the total ranging from 0-48 points (higher being more supportive). There are subscales, which are seen below as they map on to the HPAA questions.
+
+Variable | Questions
+--- | ---
+Appraisal (AP) | 7, 10, 14, 17 
+Tangible (TA) | 8, 9, 13, 16
+Belonging (BE) | 4, 5, 6, 11, 18
+Self-esteem (SE) | 3, 12, 15
+
+The scores were normalized for ease of comparison.
+
+### ISEL distribution
+
+```{r}
+
+# Looking at scores from ISEL and subgroups
+df <-
+  score_hpa2[c("ID", "LSNS", "ISEL", "AP", "TA", "BE", "SE")] %>%
+  gather(variable, value, -ID)
+
+# ISEL normality
+# Visualize the overall score distribution
+# Mostly normal, slightly skewed
+gDistributionInterpersonal <-
+  ggplot(df[df$variable == "ISEL", ], aes(x = value)) +
+  geom_histogram(binwidth = 1) +
+  labs(
+    title = "Distribution of ISEL total score",
+    x = "Score",
+    y = "Frequency"
+  ) +
+  theme_minimal()
+
+# Visualize distribution of subscales
+# Have variety of scews, do not "appear" normal
+gDistributionInterpersonalSubscales <-
+  ggplot(df[df$variable != "ISEL" & df$variable != "LSNS", ], aes(x = value, y = variable)) +
+  geom_density_ridges2(aes(fill = variable), stat = "binline", binwidth = 1, colour = "white", scale = 1.6) +
+  labs(
+    title = "Distribution of ISEL subscales",
+    x = "Points",
+    y = "Frequency"
+  ) +
+  guides(fill = FALSE) +
+  scale_fill_ptol() +
+  theme_minimal()
+
+# Plot the two ISEL graphs
+grid.arrange(gDistributionInterpersonal, gDistributionInterpersonalSubscales, ncol = 2)
+
+```
+
+### Lubben social network scale (LSNS)
+
+The LSNS is scored from 0-5 points for an 10-item questionnaire (the original form), with the total ranging from 0-50 points (higher more supportive). The subscales haven't been validated. The scores were normalized for ease of comparison.
+
+```{r}
+
+# Looking at scores from LSNS
+df <-
+  score_hpa2[c("ID", "LSNS")] %>%
+  gather(variable, value, -ID)
+
+# Visualize the overall score distribution
+# Mostly normal, slightly skewed
+gDistributionLubben <-
+  ggplot(df[df$variable == "LSNS", ], aes(x = value)) +
+  geom_histogram(binwidth = 1) +
+  labs(
+    title = "Distribution of LSNS total score",
+    x = "Score",
+    y = "Frequency"
+  ) +
+  theme_minimal()
+
+# Plot this
+gDistributionLubben
+```
+
+### Maastrich vital exhaustion questionnaire
+
+```{r}
+
+# Overall Maastrich data frame
+df <-
+  score_hpb2 %>%
+  gather(variable, value, -ID)
+
+# Visualization
+gDistributionMaastrich <-
+  ggplot(df, aes(x = value)) +
+  geom_histogram(aes(y = ..count.. / sum(..count..)), binwidth = 1) +
+  labs(
+    title = "Distribution of Maastrich Exhaustion Scale",
+    x = "Score",
+    y = "Frequency"
+  ) +
+  scale_y_continuous(labels = percent) +
+  theme_minimal()
+ 
+# Plot
+gDistributionMaastrich
+```
+
+
+### Spielberger anger trait scale
+
+```{r}
+
+# Overall Spielberger at V2
+df <- score_hpc2
+
+gDistributionSpielbergerV2 <-
+  ggplot(df, aes(x = SPIELBERGER, fill = factor(anger_level))) +
+  geom_histogram(aes(y = ..count../sum(..count..)), binwidth = 0.5) +
+  labs(
+    title = "Distribution of Spielberger Anger Trait Scale [V2]",
+    x = "Score",
+    y = "Frequency",
+    fill = "Anger Level"
+  ) +
+  scale_y_continuous(label = percent) +
+  scale_fill_ptol() + 
+  theme_minimal()
+
+# Overall Spielberger at V2
+df <- score_hpc4
+
+gDistributionSpielbergerV4 <-
+  ggplot(df, aes(x = SPIELBERGER, fill = factor(anger_level))) +
+  geom_histogram(aes(y = ..count.. / sum(..count..)), binwidth = 0.5) +
+  labs(
+    title = "Distribution of Spielberger Anger Trait Scale [V4]",
+    x = "Score",
+    y = "Frequency",
+    fill = "Anger Level"
+  ) +
+  scale_y_continuous(label = percent) +
+  scale_fill_ptol() +
+  theme_minimal()
+
+# Plot side by side
+grid.arrange(gDistributionSpielbergerV2, gDistributionSpielbergerV4, ncol = 1)
+```
+
+## Heart rate variability measures
+
+
+### Distribution at visit 1
+
+```{r}
+
+# Make a long format of variables for visualization
+df <- hrv1 %>% gather(variable, value, -ID)
+
+# Visualize each distribution pattern
+gDistributionHRV1 <-
+  ggplot(df, aes(x = value, fill = variable)) +
+  facet_wrap(~ variable, ncol = 3, scales = "free") +
+  geom_histogram(aes(y = ..count.. / sum(..count..))) +
+  scale_y_continuous(labels = percent) +
+  scale_fill_ptol() +
+  labs(
+    title = "Distribution of untransformed HRV [V1]",
+    x = "Values",
+    y = "Frequency (percent)"
+  ) +
+  guides(fill = FALSE) +
+  theme_minimal()
+
+# Normalized long table
+df <- z_hrv1 %>% gather(variable, value, -ID)
+
+# Ridge plots after normalization
+gRidgesHRV1 <-
+  ggplot(df, aes(x = value, y = variable)) +
+  geom_density_ridges2(aes(fill = variable), colour = "white", scale = 1.3) +
+  scale_fill_ptol() +
+  xlim(-3, 3) +
+  labs(
+    title = "Distribution of HRV after normalization at V1",
+    x = "Values after cube root and z-normalization",
+    y = "HRV measures distribution"
+  ) +
+  guides(fill = FALSE) +
+  theme_minimal()
+
+# Correlation tests
+df <- z_hrv1[-1]
+correlation_plot_hrv_v1 <-
+  ggcorr(df, nbreaks = 10, palette = "BrBG", label = TRUE)
+
+# Plot
+gRidgesHRV1
+```
+
+### Distribution at visit 4
+
+```{r}
+
+# Make a long format of variables for visualization
+df <- hrv4 %>% gather(variable, value, -ID)
+
+# Visualize each distribution pattern
+gDistributionHRV4 <-
+  ggplot(df, aes(x = value, fill = variable)) +
+  facet_wrap(~ variable, ncol = 3, scales = "free") +
+  geom_histogram(aes(y = ..count.. / sum(..count..))) +
+  scale_y_continuous(labels = percent) +
+  scale_fill_ptol() +
+  labs(
+    title = "Distribution of untransformed HRV [V4]",
+    x = "Values",
+    y = "Frequency (percent)"
+  ) +
+  guides(fill = FALSE) + 
+  theme_minimal()
+
+# Normalized long table
+df <- z_hrv4 %>% gather(variable, value, -ID)
+
+# Ridge plots after normalization
+gRidgesHRV4 <-
+  ggplot(df, aes(x = value, y = variable)) +
+  geom_density_ridges2(aes(fill = variable), colour = "white", scale = 1.3) +
+  scale_fill_ptol() +
+  xlim(-3, 3) +
+  labs(
+    title = "Distribution of HRV after normalization at V4",
+    x = "Values after cube root and z-normalization",
+    y = "HRV measures distribution"
+  ) +
+  guides(fill = FALSE) +
+  theme_minimal()
+
+# Correlation tests
+df <- z_hrv4[-1]
+correlation_plot_hrv_v4 <-
+  ggcorr(df, nbreaks = 10, palette = "BrBG", label = TRUE)
+
+# Plot
+gRidgesHRV4
+```
+
+
+
+## Relationship between stress and HRV
+
+
+### Visit 2 relationships
+
+```{r}
+
+# Data frame for V2
+df <-
+  merge(score_hpa2, score_hpb2, by = "ID") %>%
+  merge(., score_hpc2, by = "ID") %>%
+  gather(psych_variable, psych_value, -ID) %>%
+  merge(., gather(z_hrv1, hrv_variable, hrv_value, -ID), by = "ID") %>%
+  as_tibble()
+
+# Create selection variables
+df$psych_variable <- factor(df$psych_variable)
+df$hrv_variable <- factor(df$hrv_variable)
+
+# Create combination column as an identifier
+df$combination <- paste(df$psych_variable, df$hrv_variable)
+
+# Create combinatorial model
+lm_v2 <-
+  df %>%
+  group_by(psych_variable, hrv_variable) %>%
+  do(
+    model =
+      lm(.$psych_value ~ .$hrv_value, data = .)
+  )
+
+# Summarize the model and extract ocefficients
+lm_v2$model_sum <- map(lm_v2$model, summary)
+lm_v2$pvalue <-
+  as.numeric(map(lm_v2$model_sum, function(x) {
+    x$coefficients[2, 4]
+  }))
+lm_v2$rsquare <-
+  as.numeric(map(lm_v2$model_sum, function(x) {
+    x$r.squared
+  }))
+
+# Select only the significant models
+lm_sig <- lm_v2[lm_v2$pvalue < .05, ]
+lm_sig$combination <- paste(lm_sig$psych_variable, lm_sig$hrv_variable)
+
+# Visualize regressions
+gRegressionsV1 <-
+  ggplot(df[df$combination %in% lm_sig$combination, ], aes(x = hrv_value, y = psych_value, colour = psych_variable)) +
+  facet_wrap(~ hrv_variable, scales = "free", ncol = 3) +
+  geom_smooth(method = "lm", se = TRUE) +
+  xlim(-3, 3) +
+  labs(
+    title = "Linear regressions of Psych ~ HRV at Visit 2",
+    x = "Normalized HRV",
+    y = "Normalized Psych Scores [SEM]",
+    colour = "Psychosocial Measures",
+    caption = "Significant correlations of HRV with psychosocial measures is visualized above."
+  ) +
+  scale_colour_ptol() +
+  theme_minimal()
+
+# Plot
+gRegressionsV1
+```
+
+### Visit 4 Relationship
+
+```{r}
+
+# Data from visit 4
+df <-
+  score_hpc4 %>%
+  gather(psych_variable, psych_value, -ID) %>%
+  merge(., gather(z_hrv4, hrv_variable, hrv_value, -ID)) %>%
+  as_tibble()
+
+# Create identifying variables
+df$psych_variable <- factor(df$psych_variable)
+df$hrv_variable <- factor(df$hrv_variable)
+df$combination <- paste(df$psych_variable, df$hrv_variable)
+
+# Create combinatorial model
+lm_v4 <-
+  df %>%
+  group_by(psych_variable, hrv_variable) %>%
+  do(
+    model =
+      lm(.$psych_value ~ .$hrv_value, data = .)
+  )
+
+# Summarize the model and extract ocefficients
+lm_v4$model_sum <- map(lm_v4$model, summary)
+lm_v4$pvalue <-
+  as.numeric(map(lm_v4$model_sum, function(x) {
+    x$coefficients[2, 4]
+  }))
+lm_v4$rsquare <-
+  as.numeric(map(lm_v4$model_sum, function(x) {
+    x$r.squared
+  }))
+
+# Select only the significant models
+lm_sig <- lm_v4[lm_v4$pvalue < .05, ]
+lm_sig$combination <- paste(lm_sig$psych_variable, lm_sig$hrv_variable)
+
+# Visualize regressions
+gRegressionsV4 <-
+  ggplot(df[df$combination %in% lm_sig$combination, ], aes(x = hrv_value, y = psych_value, colour = psych_variable)) +
+  facet_wrap(~ hrv_variable, scales = "free", ncol = 2) +
+  geom_smooth(method = "lm", se = TRUE) +
+  xlim(-3, 3) +
+  labs(
+    title = "Linear regressions of Psych ~ HRV at Visit 4",
+    x = "Normalized HRV",
+    y = "Normalized Psych Scores [SEM]",
+    colour = "Psychosocial Measures"
+  ) +
+  scale_colour_ptol() +
+  theme_minimal()
+
+# Plot
+gRegressionsV4
+```
+
+
+
+
+# Conclusion
+
+## Conclusion
+### Bibliography
+
+```{r}
+
+# Time needed to process entire script
+proc.time() - start_time
+```
+
+
+

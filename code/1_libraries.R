@@ -1,0 +1,28 @@
+#!/usr/bin/env Rscript
+
+# Libraries {{{
+library(stargazer)
+library(lubridate)
+library(rio)
+library(broom)
+library(compareGroups)
+library(icd)
+library(reshape2)
+library(ggridges)
+library(scales)
+library(ggthemes)
+library(rcompanion)
+library(GGally)
+library(psych)
+library(Hmisc)
+library(RColorBrewer)
+library(PerformanceAnalytics)
+library(survival)
+library(survminer)
+library(magrittr)
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(citr)
+library(gridExtra)
+# }}}

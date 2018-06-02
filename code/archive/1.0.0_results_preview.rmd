@@ -1,0 +1,260 @@
+---
+title: "Heart Rate Variability and Psychosocial States"
+subtitle: "An Atherosclerotic Risk in Communities Study"
+author: 
+- Anish Shah, MD^[Department of Medicine, School of Medicine, Emory University]
+- Amit Shah, MD, MSCR^[Department of Epidemiology, Rollins School of Public Health, Emory University]
+data: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 10pt
+output: 
+  beamer_presentation:
+    slide_level: 2
+---
+
+```{r setup, global_options, include=FALSE}
+knitr::opts_chunk$set(
+  cache = TRUE,
+  warning = FALSE,
+  eval = TRUE,
+  echo = FALSE,
+  include = TRUE,
+  message = FALSE,
+  dev = "png",
+  options("scipen" = 0, "digits" = 2)
+)
+```
+
+# Introduction
+
+## Set-up
+
+R was used for all data intake, modeling, and presentation
+
+```{r}
+
+load(".RData")
+
+library(stargazer)
+library(lubridate)
+library(rio)
+library(broom)
+library(compareGroups)
+library(icd)
+library(reshape2)
+library(ggridges)
+library(scales)
+library(ggthemes)
+library(rcompanion)
+library(GGally)
+library(psych)
+library(Hmisc)
+library(RColorBrewer)
+library(PerformanceAnalytics)
+library(dplyr)
+library(survival)
+library(survminer)
+library(magrittr)
+library(tidyverse)
+library(gridExtra)
+
+```
+
+## Hypothesis
+
+Our study goal is to examine 2-minute high frequency heart rate variability (V1, V4) and the longitudinal relationship with anger (V2, V4) and the cross-sectional relationship with vital exhaustion and social support (V2). We expect that a low heart rate variability will correlate with increased anger, increased exhaustion, and decreased social support. In addition, we expect that an improvement over the course of follow-up in the psychosocial state of anger will result in an increased heart rate variability.
+
+
+# Description of population 
+
+## Visit 1 demographics
+
+```{r}
+
+# Baseline characteristics include social history
+export2md(char_v1_tbl)
+
+```
+
+## Visit 2 demographics
+
+```{r}
+
+# Comorbid conditions
+export2md(char_v2_tbl)
+
+```
+
+## Visit 4 demographics
+
+```{r}
+
+# Comorbid conditions
+export2md(char_v4_tbl)
+
+```
+
+## Kaplan-Meier survival curve
+
+```{r}
+
+# Overall survival
+km_overall
+
+```
+
+
+# Description of psychosocial measures
+
+## Interpersonal support evaluation list (ISEL)
+
+ISEL is scored from 0-3 points per question for 16-items, with the total ranging from 0-48 points (higher being more supportive). There are subscales, which are seen below as they map on to the HPAA questions.
+
+Variable | Questions
+--- | ---
+AP | 7, 10, 14, 17 
+TA | 8, 9, 13, 16
+BE | 4, 5, 6, 11, 18
+SE | 3, 12, 15
+
+## Normalized ISEL
+
+```{r}
+# Distribution
+grid.arrange(gDistributionInterpersonal, gDistributionInterpersonalSubscales, ncol = 2)
+```
+
+## Lubben social network scale (LSNS)
+
+The LSNS is scored from 0-5 points for an 10-item questionnaire (the original form), with the total ranging from 0-50 points (higher more supportive). The subscales haven't been validated.
+
+## Normalized LSNS
+
+```{r}
+
+gDistributionLubben
+
+```
+
+## Maastrich Vital Exhaustion Questionnaire
+
+This is a 21 question survey indicating "vital exhaustion" that has been well validated in a number of studies with mortality.
+
+## Normalized Maastrich
+
+```{r}
+
+# Distributino
+gDistributionMaastrich
+
+```
+
+## Spielberger Anger Trait Scale
+
+This is using the Spielberger anger trait scale, which ranged in scores from 10 to 40. These are broken up into three "anger" categories based on the cumulative score.
+
+## Normalized Spielberger at visit 2 and visit 4
+
+```{r}
+
+grid.arrange(gDistributionSpielbergerV2, gDistributionSpielbergerV4, ncol = 1)
+
+```
+
+## Correlation table of psychosocial states
+
+```{r}
+
+correlation_plot_psychosocial_v2
+
+```
+
+# Description of heart rate variability
+
+## Distribution of HRV at Visit 1
+
+```{r}
+
+gDistributionHRV1
+
+```
+
+## Normalized HRV
+
+```{r}
+
+gRidgesHRV1
+
+```
+
+
+## Correlation of HRV at Visit 1
+
+```{r}
+
+correlation_plot_hrv_v1
+
+```
+
+
+## Distribution of HRV at Visit 4
+
+```{r}
+
+gDistributionHRV4
+
+```
+
+## Normalized HRV
+
+```{r}
+
+gRidgesHRV4
+
+```
+
+
+## Correlation of HRV at Visit 4
+
+```{r}
+
+correlation_plot_hrv_v4
+
+```
+
+
+# Linear regression analysis
+
+## V1-V2: Psychosocial states ~ HRV measures
+
+```{r}
+
+gRegressionsV1
+
+```
+
+## V4: Psychosocial states ~ HRV measures
+
+```{r}
+
+gRegressionsV4
+
+```
+
+# Cox proportional hazard models
+
+## Cox proportional hazard for HRV
+
+```{r, results = 'asis'}
+
+stargazer(res.cox, type = "latex", digits = 2, font.size = "tiny", no.space = TRUE, header = FALSE)
+
+```
+
+
+# Conclusion
+
+## Summary
+
+This is the initial analyses of the ARIC data base. The focus remains on the correlation between decreases in HRV and poor psychosocial states, which are both reflected in autonomic inflexibility.
+
+\bigskip Thank you.
