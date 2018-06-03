@@ -8,11 +8,20 @@
 ##############
 data/*
 
-
 # Unpublished results #
 #######################
 results/*
 
+# Word documents #
+#######################
+*.docx
+
 # Miscellaneous files #
 #######################
 *.swp
+*cache*
+*.png
+*.RData
+*.rdb
+*.rdx
+
