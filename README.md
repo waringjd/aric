@@ -7,6 +7,8 @@ output: md_document
 
 # Project overview
 
+This is a evaluation of the ARIC study, with a focus on HRV and psychosocial stressors. We are theorizing that autonomic dysfunction is associated with psychosocial stressors, and that the will be reflected by attenuated HRV.
+
 # Variable explanations
 
 ## Dictionary for comorbidities
