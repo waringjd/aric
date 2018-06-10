@@ -1,27 +1,27 @@
-
-
-# OS generated files #
-######################
-*.DS_Store*
-
-# Data bases #
-##############
-data/*
-
-# Unpublished results #
-#######################
-results/*
-
-# Word documents #
-#######################
-*.docx
-
-# Miscellaneous files #
-#######################
-*.swp
-*cache*
-*.png
+# R project files to be ignored
+*.Rproj.user
+*.Rhistory
 *.RData
+*.Ruserdata
 *.rdb
 *.rdx
+.Rproj.user
+packrat/lib*/
+packrat/src/
+
+# Ignore data files for HIPAA
+*.dat
+*.csv
+*.SAS7BDAT
+*.sas7bdat
+
+# Ignore final reports for public repo
+*.docx
+*.pdf
+
+# Ignore images stored
+*.png
+*.jpeg
+*.jpg
+
 

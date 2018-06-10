@@ -6,8 +6,8 @@ author:
 - Amit Shah, MD, MSCR^[Department of Epidemiology, Rollins School of Public Health, Emory University]
 data: "`r format(Sys.time(), '%B %d, %Y')`"
 fontsize: 10pt
-bibliography: "../../bibliography/hrv-aric.bib"
-csl: "../../bibliography/american-medical-association.csl"
+bibliography: hrv-aric.bib
+csl: bibliography/american-medical-association.csl
 output: 
   beamer_presentation:
     highlight: tango
