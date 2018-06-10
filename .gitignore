@@ -17,6 +17,9 @@ packrat/src/
 
 # Ignore final reports for public repo
 *.docx
+*.DOCX
+*.xlsx
+*.csv
 *.pdf
 
 # Ignore images stored
