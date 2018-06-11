@@ -7,7 +7,7 @@ author:
 data: "`r format(Sys.time(), '%B %d, %Y')`"
 fontsize: 10pt
 bibliography: hrv-aric.bib
-csl: bibliography/american-medical-association.csl
+csl: american-medical-association.csl
 output: 
   beamer_presentation:
     highlight: tango

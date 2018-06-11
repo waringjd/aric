@@ -1,9 +1,7 @@
 #!/usr/bin/env Rscript
 
 # Libraries {{{
-library(stargazer)
 library(lubridate)
-library(rio)
 library(broom)
 library(compareGroups)
 library(icd)
