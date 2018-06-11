@@ -1,26 +1,27 @@
 #!/usr/bin/env Rscript
 
 # Libraries {{{
-library(lubridate)
-library(broom)
-library(compareGroups)
-library(icd)
-library(reshape2)
-library(ggridges)
-library(scales)
-library(ggthemes)
-library(rcompanion)
-library(GGally)
-library(psych)
-library(Hmisc)
-library(RColorBrewer)
-library(PerformanceAnalytics)
-library(survival)
-library(survminer)
-library(magrittr)
-library(tidyverse)
-library(knitr)
-library(kableExtra)
-library(citr)
-library(gridExtra)
+
+pacman::p_load(
+			   tidyverse,
+			   lubridate,
+			   knitr,
+			   kableExtra,
+			   gridExtra,
+			   GGally,
+			   scales
+			   ggthemes,
+			   ggridges,
+			   RColorBrewer,
+			   PerformanceAnalytics,
+			   magrittr,
+			   survival,
+			   survminer,
+			   icd,
+			   compareGroups,
+			   rcompanion,
+			   broom,
+			   psych,
+			   citr
+			   )
 # }}}
