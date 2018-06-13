@@ -98,6 +98,17 @@ score_hp* | Numeric scaling of psychosocial scores
 hrv1 | 2-minute HRV data from V1
 hrv4 | 6-minute HRV data from V4
 
+### Analysis
+
+heart rate variability ~ emotional state
+
+HRV remains the outcome variable
+Emotional state is the exposure.
+
+1. Exposed: > median value
+1. Unexposed: < median value
+
+
 # Report
 
 ## Description
