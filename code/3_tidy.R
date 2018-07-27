@@ -276,11 +276,8 @@ df$BE <- rowSums(df[c(4, 5, 6, 11, 18)], na.rm = TRUE)
 df$SE <- rowSums(df[c(3, 12, 15)], na.rm = TRUE)
 
 # Place data back
-score_hpa2 <- df[c("ID", "ISEL", "LSNS", "AP", "TA", "BE", "SE")]
-
-# Normalize the data
-score_hpa2[-1] <-
-  as_tibble(scale(score_hpa2[-1], center = TRUE), scale = TRUE)
+score_hpa2 <- df[c("ID", "ISEL", "LSNS", "AP", "TA", "BE", "SE")] %>%
+	as_tibble()
 # }}}
 
 ## HPBA {{{
@@ -308,9 +305,8 @@ df[c(9, 14)] <-
 df$MAASTRICH <- rowSums(df[c(1:21)], na.rm = TRUE)
 
 # Place data back
-score_hpb2 <- df[c("ID", "MAASTRICH")]
-score_hpb2[-1] <-
-  as_tibble(scale(score_hpb2[-1], center = TRUE, scale = TRUE))
+score_hpb2 <- df[c("ID", "MAASTRICH")] %>%
+	as_tibble()
 # }}}
 
 ## HPCB {{{
@@ -341,9 +337,8 @@ df$anger_level[df$SPIELBERGER >= 15] <- 2
 df$anger_level[df$SPIELBERGER >= 22] <- 3
 
 # Confirm data frame, scaling for normality
-score_hpc2 <- df[c("ID", "SPIELBERGER", "anger_level")]
-score_hpc2[-c(1, 3)] <-
-  as_tibble(scale(score_hpc2[-c(1, 3)], center = TRUE, scale = TRUE))
+score_hpc2 <- df[c("ID", "SPIELBERGER", "anger_level")] %>% 
+	as_tibble()
 # }}}
 
 # Visit 4 HPCB file {{{
@@ -369,9 +364,8 @@ df$anger_level[df$SPIELBERGER >= 15] <- 2
 df$anger_level[df$SPIELBERGER >= 22] <- 3
 
 # Confirm data frame
-score_hpc4 <- df[c("ID", "SPIELBERGER", "anger_level")]
-score_hpc4[-c(1, 3)] <-
-  as_tibble(scale(score_hpc4[-c(1, 3)], center = TRUE, scale = TRUE))
+score_hpc4 <- df[c("ID", "SPIELBERGER", "anger_level")] %>%
+	as_tibble()
 # }}}
 # }}}
 # }}}

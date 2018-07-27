@@ -26,10 +26,10 @@ knitr::opts_chunk$set(
   echo = FALSE,
   include = TRUE,
   message = FALSE,
-  results = "asis",
   dpi = 600,
   dev = "png",
-  options("scipen" = 0, "digits" = 3)
+  options("scipen" = 0, "digits" = 3),
+  tinytex.verbose = TRUE
 )
 ```
 
@@ -83,7 +83,7 @@ Hypothesis:
   
 ## Methods
 
-The data has been tidied up to this point. The current variables are...
+The data has been tidied up to this point. The current variables are:
 
 Variable | Description
 --- | ---
@@ -98,16 +98,14 @@ score_hp* | Numeric scaling of psychosocial scores
 hrv1 | 2-minute HRV data from V1
 hrv4 | 6-minute HRV data from V4
 
-### Analysis
-
-heart rate variability ~ emotional state
+The general paradigm is that HRV will be modulated by stress.
+**HRV ~ stress**
 
 HRV remains the outcome variable
-Emotional state is the exposure.
+Emotional state is the exposure, which could be binary by median, or based on standard deviations. 
 
-1. Exposed: > median value
-1. Unexposed: < median value
-
+1. Exposed: high stress
+1. Unexposed: low stress
 
 # Report
 
@@ -115,10 +113,9 @@ Emotional state is the exposure.
 
 The overall population should be described, but the at V2 and V4 they should be characterized by their exposure (the stressors). 
 
-
 ### Population
 
-```{r}
+```{r, results = "asis"}
 
 # THe initial population
 char_v1 <- 
@@ -129,9 +126,6 @@ char_v1 <-
 export2md(char_v1)
 
 ```
-
-
-### Psychosocial measures
 
 ### Interpersonal support evaluation list (ISEL)
 
@@ -186,6 +180,35 @@ gDistributionInterpersonalSubscales <-
 grid.arrange(gDistributionInterpersonal, gDistributionInterpersonalSubscales, ncol = 2)
 
 ```
+
+### ISEL Summary
+
+```{r}
+
+# Will compare groups based on median values of each stressor
+# Add marker for if > or < median
+# 1 = high stress state
+df <- 
+  score_hpa2 %>%
+  within(., {
+    ISEL[ISEL < median(ISEL)] = 1
+    ISEL[ISEL > median(ISEL)] = 0
+    AP[AP < median(AP)] = 1
+    AP[AP > median(AP)] = 0
+    TA[TA < median(TA)] = 1
+    TA[TA > median(TA)] = 0
+    BE[BE < median(BE)] = 1
+    BE[BE > median(BE)] = 0
+    SE[SE < median(SE)] = 1
+    SE[SE > median(SE)] = 0
+  })
+
+# Add in visit 2 cross-sectional data for comparison
+df <- as_tibble(merge(df, score_hpa2, by = "ID"))
+
+
+```
+
 
 ### Lubben social network scale (LSNS)
 
@@ -511,7 +534,7 @@ gRegressionsV4
 
 # Conclusion
 
-### Bibliography
+### References {.allowframebreaks}
 
 
 

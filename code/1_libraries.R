@@ -22,6 +22,7 @@ compareGroups,
 rcompanion,
 broom,
 psych,
-citr
+citr,
+stargazer
 )
 # }}}
