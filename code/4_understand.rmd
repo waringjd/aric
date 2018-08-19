@@ -10,9 +10,7 @@ bibliography: hrv-aric.bib
 csl: american-medical-association.csl
 output: 
   beamer_presentation:
-    highlight: tango
     slide_level: 3
-    colortheme: "dolphin"
 editor_options: 
   chunk_output_type: console
 ---
@@ -31,6 +29,8 @@ knitr::opts_chunk$set(
   options("scipen" = 0, "digits" = 3),
   tinytex.verbose = TRUE
 )
+
+knitr::opts_knit$set(kable.force.latex=FALSE)
 ```
 
 ```{r}
@@ -181,35 +181,6 @@ grid.arrange(gDistributionInterpersonal, gDistributionInterpersonalSubscales, nc
 
 ```
 
-### ISEL Summary
-
-```{r}
-
-# Will compare groups based on median values of each stressor
-# Add marker for if > or < median
-# 1 = high stress state
-df <- 
-  score_hpa2 %>%
-  within(., {
-    ISEL[ISEL < median(ISEL)] = 1
-    ISEL[ISEL > median(ISEL)] = 0
-    AP[AP < median(AP)] = 1
-    AP[AP > median(AP)] = 0
-    TA[TA < median(TA)] = 1
-    TA[TA > median(TA)] = 0
-    BE[BE < median(BE)] = 1
-    BE[BE > median(BE)] = 0
-    SE[SE < median(SE)] = 1
-    SE[SE > median(SE)] = 0
-  })
-
-# Add in visit 2 cross-sectional data for comparison
-df <- as_tibble(merge(df, score_hpa2, by = "ID"))
-
-
-```
-
-
 ### Lubben social network scale (LSNS)
 
 The LSNS is scored from 0-5 points for an 10-item questionnaire (the original form), with the total ranging from 0-50 points (higher more supportive). The subscales haven't been validated. The scores were normalized for ease of comparison.
@@ -237,6 +208,65 @@ gDistributionLubben <-
 gDistributionLubben
 ```
 
+### Comparison of visit 2 by social support {.allowframebreaks}
+
+```{r, results = "asis"}
+
+# Use the median for the HPA values for visit 2
+# Split into quantiles based on the score (4 quantiles)
+df <-
+  within(score_hpa2, {
+    iselgrp = ntile(ISEL, 4)
+    apgrp = ntile(AP, 4)
+    tagrp = ntile(TA, 4)
+    begrp = ntile(BE, 4) 
+    segrp = ntile(SE, 4)
+    lsnsgrp = ntile(LSNS, 4)
+  })
+
+# New data table
+df <- left_join(df, cs2, by = "ID")
+
+# Comparison for ISEL
+isel_v2 <-
+  compareGroups(iselgrp ~ BMI + HTN + CHD + DIABETES + STROKE, data = df) %>%
+  createTable(., type = 1, show.n = FALSE, digits = 1, hide.no = c("Absent"))
+
+# Comparison for AP
+ap_v2 <-
+  compareGroups(apgrp ~ BMI + HTN + CHD + DIABETES + STROKE, data = df) %>%
+  createTable(., type = 1, show.n = FALSE, digits = 1, hide.no = c("Absent"))
+
+# Comparison for TA
+ta_v2 <-
+  compareGroups(tagrp ~ BMI + HTN + CHD + DIABETES + STROKE, data = df) %>%
+  createTable(., type = 1, show.n = FALSE, digits = 1, hide.no = c("Absent"))
+
+# Comparison for BE
+be_v2 <-
+  compareGroups(begrp ~ BMI + HTN + CHD + DIABETES + STROKE, data = df) %>%
+  createTable(., type = 1, show.n = FALSE, digits = 1, hide.no = c("Absent"))
+
+# Comparison for SE
+se_v2 <-
+  compareGroups(segrp ~ BMI + HTN + CHD + DIABETES + STROKE, data = df) %>%
+  createTable(., type = 1, show.n = FALSE, digits = 1, hide.no = c("Absent"))
+
+# Comparison for LSNS
+lsns_v2 <-
+  compareGroups(lsnsgrp ~ BMI + HTN + CHD + DIABETES + STROKE, data = df) %>%
+  createTable(., type = 1, show.n = FALSE, digits = 1, hide.no = c("Absent"))
+
+# Display
+export2md(isel_v2)
+export2md(ap_v2) 
+export2md(ta_v2)
+export2md(be_v2)
+export2md(se_v2)
+export2md(lsns_v2)
+
+```
+
 ### Maastrich vital exhaustion questionnaire
 
 ```{r}
@@ -262,8 +292,30 @@ gDistributionMaastrich <-
 gDistributionMaastrich
 ```
 
+### Comparison of visit 2 by vital exhaustion {.allowframebreaks}
 
-### Spielberger anger trait scale
+```{r, results = "asis"}
+
+# Maastrich scores broken down into 4 quantiles
+# Higher the score, the more exhausted you are.
+df <- 
+  within(score_hpb2, {
+    vitalgrp = ntile(MAASTRICH, 4)
+  })
+
+# New data table
+df <- left_join(df, cs2, by = "ID")
+
+# Comparison for ISEL
+vital_v2 <-
+  compareGroups(vitalgrp ~ BMI + HTN + CHD + DIABETES + STROKE, data = df) %>%
+  createTable(., type = 1, show.n = FALSE, digits = 1, hide.no = c("Absent"))
+
+# Data table
+export2md(vital_v2)
+```
+
+### Spielberger anger trait scale 
 
 ```{r}
 
@@ -272,7 +324,7 @@ df <- score_hpc2
 
 gDistributionSpielbergerV2 <-
   ggplot(df, aes(x = SPIELBERGER, fill = factor(anger_level))) +
-  geom_histogram(aes(y = ..count../sum(..count..)), binwidth = 0.5) +
+  geom_histogram(aes(y = ..count../sum(..count..)), binwidth = 1) +
   labs(
     title = "Distribution of Spielberger Anger Trait Scale [V2]",
     x = "Score",
@@ -288,7 +340,7 @@ df <- score_hpc4
 
 gDistributionSpielbergerV4 <-
   ggplot(df, aes(x = SPIELBERGER, fill = factor(anger_level))) +
-  geom_histogram(aes(y = ..count.. / sum(..count..)), binwidth = 0.5) +
+  geom_histogram(aes(y = ..count.. / sum(..count..)), binwidth = 1) +
   labs(
     title = "Distribution of Spielberger Anger Trait Scale [V4]",
     x = "Score",
@@ -303,8 +355,56 @@ gDistributionSpielbergerV4 <-
 grid.arrange(gDistributionSpielbergerV2, gDistributionSpielbergerV4, ncol = 1)
 ```
 
-## Heart rate variability measures
+### Comparison of visit 2 by anger {.allowframebreaks}
 
+```{r, results = "asis"}
+
+# VISIT 2
+# Spielberger anger trait broke down by anger level into quartiles
+# Higher the score, the angrier you are
+df <- 
+  within(score_hpc2, {
+    angergrp = ntile(SPIELBERGER, 4)
+  })
+
+# New data table
+df <- left_join(df, cs2, by = "ID")
+
+# Comparison for anger trait
+anger_v2 <-
+  compareGroups(angergrp ~ DRINKER + SMOKER + BMI + HTN + CHD + DIABETES + STROKE, data = df) %>%
+  createTable(., type = 1, show.n = FALSE, digits = 1, hide.no = c("Absent"))
+
+# Data table
+export2md(anger_v2)
+
+```
+
+### Comparison of visit 4 by anger {.allowframebreaks}
+
+```{r, results = "asis"}
+
+# VISIT 4
+# Spielberger anger trait broke down by anger level
+# Higher the score, the angrier you are
+df <- 
+  within(score_hpc4, {
+    angergrp = ntile(SPIELBERGER, 4)
+  })
+
+# New data table
+df <- left_join(df, cs4, by = "ID")
+
+# Comparison for anger trait
+anger_v4 <-
+  compareGroups(angergrp ~ DRINKER + SMOKER + BMI + HTN + CHD + DIABETES + STROKE, data = df) %>%
+  createTable(., type = 1, show.n = FALSE, digits = 1, hide.no = c("Absent"))
+
+# Display
+export2md(anger_v4)
+```
+
+## Heart rate variability measures
 
 ### Distribution at visit 1
 
@@ -402,10 +502,7 @@ correlation_plot_hrv_v4 <-
 gRidgesHRV4
 ```
 
-
-
 ## Relationship between stress and HRV
-
 
 ### Visit 2 relationships
 
