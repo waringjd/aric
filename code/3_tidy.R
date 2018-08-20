@@ -368,6 +368,7 @@ score_hpc4 <- df[c("ID", "SPIELBERGER", "anger_level")] %>%
 	as_tibble()
 # }}}
 # }}}
+
 # }}}
 
 ## Heart rate variability {{{
@@ -461,7 +462,13 @@ z_hrv4 <-
 
 ## Clean up {{{
 
+# Combined psychosocial scores
+tmp <- full_join(score_hpa2, score_hpb2)
+scores <- full_join(tmp, score_hpc2)
+
 # Clean up of memory-clogging junk
-rm(df, questions, svar, v1d, v2d, v4d)
+rm(df, questions, svar, v1d, v2d, v4d, tmp)
+
+
 # }}}
 

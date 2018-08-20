@@ -2,14 +2,15 @@
 title: "Heart Rate Variability and Psychosocial States"
 subtitle: "An Atherosclerotic Risk in Communities Study"
 author: 
-- Anish Shah, MD^[Department of Medicine, School of Medicine, Emory University]
-- Amit Shah, MD, MSCR^[Department of Epidemiology, Rollins School of Public Health, Emory University]
+  - Anish Shah, MD^[Department of Medicine, School of Medicine, Emory University]
+  - Amit Shah, MD, MSCR^[Department of Epidemiology, Rollins School of Public Health, Emory University]
 data: "`r format(Sys.time(), '%B %d, %Y')`"
 fontsize: 10pt
 bibliography: hrv-aric.bib
 csl: american-medical-association.csl
 output: 
   beamer_presentation:
+    colortheme: "beaver"
     slide_level: 3
 editor_options: 
   chunk_output_type: console
@@ -46,7 +47,7 @@ source("3_tidy.R")
 
 ```
 
-# Understand
+# UNDERSTAND
 
 ## Introduction
 
@@ -107,9 +108,9 @@ Emotional state is the exposure, which could be binary by median, or based on st
 1. Exposed: high stress
 1. Unexposed: low stress
 
-# Report
+# REPORT
 
-## Description
+## DESCRIPTION
 
 The overall population should be described, but the at V2 and V4 they should be characterized by their exposure (the stressors). 
 
@@ -119,7 +120,7 @@ The overall population should be described, but the at V2 and V4 they should be 
 
 # THe initial population
 char_v1 <- 
-  compareGroups(~ GENDER + RACE + BMI + HTN + CHD + DIABETES, data = cs1) %>%
+  compareGroups(~ BMI + HTN + CHD + DIABETES, data = cs1) %>%
   createTable(., type = 1, show.n = FALSE, hide.no = c("Absent"), digits = 0)
 
 # Plot the table
@@ -127,7 +128,7 @@ export2md(char_v1)
 
 ```
 
-### Interpersonal support evaluation list (ISEL)
+### Interpersonal Support Evaluation List (ISEL)
 
 The ISEL is scored from 0-3 points per question for 16-items, with the total ranging from 0-48 points (higher being more supportive). There are subscales, which are seen below as they map on to the HPAA questions.
 
@@ -140,7 +141,7 @@ Self-esteem (SE) | 3, 12, 15
 
 The scores were normalized for ease of comparison.
 
-### ISEL distribution
+### ISEL Distribution
 
 ```{r}
 
@@ -181,7 +182,7 @@ grid.arrange(gDistributionInterpersonal, gDistributionInterpersonalSubscales, nc
 
 ```
 
-### Lubben social network scale (LSNS)
+### Lubben Social Network Scale (LSNS)
 
 The LSNS is scored from 0-5 points for an 10-item questionnaire (the original form), with the total ranging from 0-50 points (higher more supportive). The subscales haven't been validated. The scores were normalized for ease of comparison.
 
@@ -208,9 +209,9 @@ gDistributionLubben <-
 gDistributionLubben
 ```
 
-### Comparison of visit 2 by social support {.allowframebreaks}
+### V2 Comparison by Social Support
 
-```{r, results = "asis"}
+```{r}
 
 # Use the median for the HPA values for visit 2
 # Split into quantiles based on the score (4 quantiles)
@@ -257,17 +258,33 @@ lsns_v2 <-
   compareGroups(lsnsgrp ~ BMI + HTN + CHD + DIABETES + STROKE, data = df) %>%
   createTable(., type = 1, show.n = FALSE, digits = 1, hide.no = c("Absent"))
 
-# Display
-export2md(isel_v2)
-export2md(ap_v2) 
-export2md(ta_v2)
-export2md(be_v2)
-export2md(se_v2)
-export2md(lsns_v2)
+# Display below
 
 ```
 
-### Maastrich vital exhaustion questionnaire
+`r export2md(isel_v2)`
+
+----
+
+`r export2md(ap_v2)`
+
+----
+
+`r export2md(ta_v2)`
+
+----
+
+`r export2md(be_v2)`
+
+----
+
+`r export2md(se_v2)`
+
+----
+
+`r export2md(lsns_v2)`
+
+### Maastrich Vital Exhaustion Questionnaire
 
 ```{r}
 
@@ -292,7 +309,7 @@ gDistributionMaastrich <-
 gDistributionMaastrich
 ```
 
-### Comparison of visit 2 by vital exhaustion {.allowframebreaks}
+### V2 Comparison by Vital Exhaustion
 
 ```{r, results = "asis"}
 
@@ -315,7 +332,7 @@ vital_v2 <-
 export2md(vital_v2)
 ```
 
-### Spielberger anger trait scale 
+### Spielberger Anger Trait Scale 
 
 ```{r}
 
@@ -355,7 +372,7 @@ gDistributionSpielbergerV4 <-
 grid.arrange(gDistributionSpielbergerV2, gDistributionSpielbergerV4, ncol = 1)
 ```
 
-### Comparison of visit 2 by anger {.allowframebreaks}
+### V2 Comparison by Anger
 
 ```{r, results = "asis"}
 
@@ -372,7 +389,7 @@ df <- left_join(df, cs2, by = "ID")
 
 # Comparison for anger trait
 anger_v2 <-
-  compareGroups(angergrp ~ DRINKER + SMOKER + BMI + HTN + CHD + DIABETES + STROKE, data = df) %>%
+  compareGroups(angergrp ~ BMI + HTN + CHD + DIABETES + STROKE, data = df) %>%
   createTable(., type = 1, show.n = FALSE, digits = 1, hide.no = c("Absent"))
 
 # Data table
@@ -380,7 +397,7 @@ export2md(anger_v2)
 
 ```
 
-### Comparison of visit 4 by anger {.allowframebreaks}
+### V4 Comparison by Anger
 
 ```{r, results = "asis"}
 
@@ -397,16 +414,16 @@ df <- left_join(df, cs4, by = "ID")
 
 # Comparison for anger trait
 anger_v4 <-
-  compareGroups(angergrp ~ DRINKER + SMOKER + BMI + HTN + CHD + DIABETES + STROKE, data = df) %>%
+  compareGroups(angergrp ~ BMI + HTN + CHD + DIABETES + STROKE, data = df) %>%
   createTable(., type = 1, show.n = FALSE, digits = 1, hide.no = c("Absent"))
 
 # Display
 export2md(anger_v4)
 ```
 
-## Heart rate variability measures
+## HEART RATE VARIABILITY 
 
-### Distribution at visit 1
+### V1 Distribution
 
 ```{r}
 
@@ -454,7 +471,7 @@ correlation_plot_hrv_v1 <-
 gRidgesHRV1
 ```
 
-### Distribution at visit 4
+### V4 Distribution
 
 ```{r}
 
@@ -502,9 +519,11 @@ correlation_plot_hrv_v4 <-
 gRidgesHRV4
 ```
 
-## Relationship between stress and HRV
+## CROSS-SECTIONAL RELATIONSHIP of HRV and STRESS
 
-### Visit 2 relationships
+### V2 Distribution
+
+### V2 Linear Regressions
 
 ```{r}
 
@@ -567,7 +586,10 @@ gRegressionsV1 <-
 gRegressionsV1
 ```
 
-### Visit 4 Relationship
+
+### V4 Distribution
+
+### V4 Linear Regressions
 
 ```{r}
 
@@ -629,7 +651,7 @@ gRegressionsV4
 
 
 
-# Conclusion
+# CONCLUSION
 
 ### References {.allowframebreaks}
 
