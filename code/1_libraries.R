@@ -23,6 +23,8 @@ rcompanion,
 broom,
 psych,
 citr,
-stargazer
+Epi,
+stargazer,
+tables
 )
 # }}}

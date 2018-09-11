@@ -22,7 +22,7 @@ svar <- c("ID", "BIRTHDAT", "V1DATE01", "GENDER", "RACEGRP", "DRNKR01", "CIGT01"
 cs1 <- cs1[c(svar)]
 names(cs1) <- c("ID", "DATE_BIRTH", "DATE_V1", "GENDER", "RACE", "DRINKER", "SMOKER", "BMI", "HTN", "CHD", "DIABETES")
 
-cs1$AGE_V1 <- interval(cs1$DATE_V1, cs1$DATE_BIRTH) / years(1)
+cs1$AGE_V1 <- interval(cs1$DATE_BIRTH, cs1$DATE_V1) / years(1)
 
 # Convert to factors
 cs1 <- within(cs1, {

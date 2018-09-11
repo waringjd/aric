@@ -31,7 +31,7 @@ knitr::opts_chunk$set(
   tinytex.verbose = TRUE
 )
 
-knitr::opts_knit$set(kable.force.latex=FALSE)
+options(xtable.table.placement="H")
 ```
 
 ```{r}
@@ -84,6 +84,8 @@ Hypothesis:
   
 ## Methods
 
+### Description of data
+
 The data has been tidied up to this point. The current variables are:
 
 Variable | Description
@@ -123,8 +125,14 @@ char_v1 <-
   compareGroups(~ BMI + HTN + CHD + DIABETES, data = cs1) %>%
   createTable(., type = 1, show.n = FALSE, hide.no = c("Absent"), digits = 0)
 
-# Plot the table
-export2md(char_v1)
+char_v1 <- 
+  tabular((n = 1) ~ (GENDER + RACE + DRINKER + SMOKER + HTN + CHD + DIABETES) + (AGE_V1 + BMI)*(mean + sd), data = na.omit(cs1)) 
+  
+  as.matrix %>%
+  xtable(., caption = 'Cohort Description')  %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = 'top')
+
+  
 
 ```
 
@@ -521,7 +529,115 @@ gRidgesHRV4
 
 ## CROSS-SECTIONAL RELATIONSHIP of HRV and STRESS
 
-### V2 Distribution
+### V2 Distribution by Quartile
+
+```{r}
+
+# Data from V1 is carried forward impromptu. 
+# HRV = z_hrv1
+# Stress will be from visit 2 = scores
+
+# Add quartiles for the psychosocial measures and combine
+df <- 
+  within(scores, {
+    iselgrp = ntile(ISEL, 4)
+    apgrp = ntile(AP, 4)
+    tagrp = ntile(TA, 4)
+    begrp = ntile(BE, 4) 
+    segrp = ntile(SE, 4)
+    lsnsgrp = ntile(LSNS, 4)
+    vitalgrp = ntile(MAASTRICH, 4)
+    angergrp = ntile(SPIELBERGER, 4)
+  }) %>%
+  inner_join(hrv1, .)
+
+
+# Each psychosocial measure and its effect on different HRV measures
+
+# ISEL
+isel_hrv <-
+  compareGroups(iselgrp ~ BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN, data = df) %>%
+  createTable(., type = 1, show.n = FALSE, digits = 1, hide.no = c("Absent"))
+
+# AP
+ap_hrv <-
+  compareGroups(apgrp ~ BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN, data = df) %>%
+  createTable(., type = 1, show.n = FALSE, digits = 1, hide.no = c("Absent"))
+
+# TA
+ta_hrv <-
+  compareGroups(tagrp ~ BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN, data = df) %>%
+  createTable(., type = 1, show.n = FALSE, digits = 1, hide.no = c("Absent"))
+
+# BE
+be_hrv <-
+  compareGroups(begrp ~ BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN, data = df) %>%
+  createTable(., type = 1, show.n = FALSE, digits = 1, hide.no = c("Absent"))
+
+# SE
+se_hrv <-
+  compareGroups(segrp ~ BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN, data = df) %>%
+  createTable(., type = 1, show.n = FALSE, digits = 1, hide.no = c("Absent"))
+
+# LSNS
+lsns_hrv <-
+  compareGroups(lsnsgrp ~ BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN, data = df) %>%
+  createTable(., type = 1, show.n = FALSE, digits = 1, hide.no = c("Absent"))
+
+# MAASTRICH
+vital_hrv <-
+  compareGroups(vitalgrp ~ BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN, data = df) %>%
+  createTable(., type = 1, show.n = FALSE, digits = 1, hide.no = c("Absent"))
+
+# SPIELBERGER
+anger_hrv <-
+  compareGroups(angergrp ~ BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN, data = df) %>%
+  createTable(., type = 1, show.n = FALSE, digits = 1, hide.no = c("Absent"))
+
+```
+
+Each measure of psychosocial stress was divided into four quartiles. These were all compared by HRV measure to examine the relationship. Of note, the ISEL subscales and the Maastrich questionnaire were of significance trends.
+
+----
+
+`r export2md(isel_hrv)`
+
+----
+
+`r export2md(ap_hrv)`
+
+----
+
+`r export2md(ta_hrv)`
+
+----
+
+`r export2md(se_hrv)`
+
+----
+
+`r export2md(be_hrv)`
+
+----
+
+`r export2md(lsns_hrv)`
+
+----
+
+`r export2md(vital_hrv)`
+
+----
+
+`r export2md(anger_hrv)`
+
+
+
+### V2 Relationship Visualization
+
+```{r}
+
+```
+
 
 ### V2 Linear Regressions
 
@@ -638,7 +754,7 @@ gRegressionsV4 <-
   labs(
     title = "Linear regressions of Psych ~ HRV at Visit 4",
     x = "Normalized HRV",
-    y = "Normalized Psych Scores [SEM]",
+    y = "Normalized Psych Scores [SEM",
     colour = "Psychosocial Measures"
   ) +
   scale_colour_ptol() +
@@ -652,6 +768,12 @@ gRegressionsV4
 
 
 # CONCLUSION
+
+### Summary
+
+### Major Points
+
+### Conclusion
 
 ### References {.allowframebreaks}
 
