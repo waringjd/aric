@@ -282,9 +282,9 @@ score_hpa2 <- df[c("ID", "ISEL", "LSNS", "AP", "TA", "BE", "SE")] %>%
 
 ## HPBA {{{
 
-# The HPBA file includes the Maastricht Vital Exhaustion Questionnaire.
+# The HPBA file includes the Maastrichtt Vital Exhaustion Questionnaire.
 
-# Maastrich data
+# Maastricht data
 # Don't know is considered NA
 df <- hpb2
 
@@ -302,10 +302,10 @@ df[c(9, 14)] <-
   df[c(9, 14)] %>%
   mutate_all(funs(recode(., "Y" = 0, "N" = 1)))
 
-df$MAASTRICH <- rowSums(df[c(1:21)], na.rm = TRUE)
+df$MAASTRICHT <- rowSums(df[c(1:21)], na.rm = TRUE)
 
 # Place data back
-score_hpb2 <- df[c("ID", "MAASTRICH")] %>%
+score_hpb2 <- df[c("ID", "MAASTRICHT")] %>%
 	as_tibble()
 # }}}
 
@@ -344,7 +344,7 @@ score_hpc2 <- df[c("ID", "SPIELBERGER", "anger_level")] %>%
 # Visit 4 HPCB file {{{
 df <- hpc4
 
-# Create data frame from Maastrich, trimmed down
+# Create data frame from Maastricht, trimmed down
 questions <- c("HPCB1", "HPCB2", "HPCB3", "HPCB4", "HPCB5", "HPCB6", "HPCB7", "HPCB8", "HPCB9", "HPCB10")
 df <- df[c(questions, "ID")]
 

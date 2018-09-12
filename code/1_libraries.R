@@ -3,28 +3,52 @@
 # Libraries {{{
 
 pacman::p_load(
-tidyverse,
-lubridate,
+
+# Development and production
+rmarkdown,
 knitr,
+tinytex,
 kableExtra,
-gridExtra,
-GGally,
+citr,
+
+# Visualization
 scales,
 ggthemes,
+reshape2,
+gridExtra,
 ggridges,
 RColorBrewer,
+GGally,
+
+# Statistical tools
+Hmisc,
+psych,
+lme4,
+lattice,
+rms,
+boot,
+FSA,
+ordinal,
 PerformanceAnalytics,
-magrittr,
 survival,
 survminer,
-icd,
+tables,
 compareGroups,
-rcompanion,
-broom,
-psych,
-citr,
 Epi,
-stargazer,
-tables
+rcompanion,
+
+# Tidying and cleaning data
+magrittr,
+tidyverse,
+lubridate,
+readxl,
+xtable,
+tables,
+stringr,
+broom,
+ids,
+dplyr,
+icd
+
 )
 # }}}
