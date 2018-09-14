@@ -31,7 +31,7 @@ knitr::opts_chunk$set(
   tinytex.verbose = TRUE
 )
 
-options(xtable.table.placement="H")
+options(xtable.table.placement = "H")
 ```
 
 ```{r}
@@ -44,10 +44,9 @@ source("2_intake.R")
 
 # Tidy
 source("3_tidy.R")
-
 ```
 
-# UNDERSTAND
+# PURPOSE ====
 
 ## Introduction
 
@@ -88,19 +87,19 @@ Hypothesis:
 
 The data has been tidied up to this point. The current variables are:
 
-Variable | Description
---- | ---
-demo | Overall sample description, including death
-cs2 | Prevalence of disease at V2
-cs4 | Prevalence of disease at V4
-hpa2 | ISEL and LSNS scores at V2
-hpb2 | Maastrichtt vital exhaustion at V2
-hpc2 | Spielberger Anger at V2
-hpc4 | Spielberger Anger at V4
-score_hp* | Numeric scaling of psychosocial scores
-hrv1 | 2-minute HRV data from V1
-hrv4 | 6-minute HRV data from V4
-
+| Variable | Description |
+| --- | --- |
+| demo | Overall sample description, including death |
+| cs2 | Prevalence of disease at V2 |
+| cs4 | Prevalence of disease at V4 |
+| hpa2 | ISEL and LSNS scores at V2 |
+| hpb2 | Maastrichtt vital exhaustion at V2 |
+| hpc2 | Spielberger Anger at V2 |
+| hpc4 | Spielberger Anger at V4 |
+| score_hp* | Numeric scaling of psychosocial scores |
+| hrv1 | 2-minute HRV data from V1 |
+| hrv4 | 6-minute HRV data from V4 |
+ |
 The general paradigm is that HRV will be modulated by stress.
 **HRV ~ stress**
 
@@ -110,36 +109,32 @@ Emotional state is the exposure, which could be binary by median, or based on st
 1. Exposed: high stress
 1. Unexposed: low stress
 
-# REPORT
+# DESCRIPTION ====
 
-## DESCRIPTION
+## PSYCHOSOCIAL DESCRIPTION ====
 
-The overall population should be described, but the at V2 and V4 they should be characterized by their exposure (the stressors). 
-
-### Population
+### Initial Population
 
 ```{r, results = "asis"}
 
 # THe initial population
-char_v1 <- 
-  tabular(Format(digits=2)*(HTN + CHD + DIABETES) + Format(digits=2)*(AGE_V1 + BMI)*(mean + sd) ~ GENDER + (n=1), data = na.omit(cs1))  %>%
-  as.matrix %>%
-  xtable(., caption = 'Initial Cohort Description')  %>%
-  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = 'top', size = "\\small")
-
+char_v1 <-
+  tabular(Format(digits = 2) * (HTN + CHD + DIABETES) + Format(digits = 2) * (AGE_V1 + BMI) * (mean + sd) ~ GENDER + (n = 1), data = na.omit(cs1)) %>%
+  as.matrix() %>%
+  xtable(., caption = "Initial Cohort Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
 ```
 
 ### Interpersonal Support Evaluation List (ISEL)
 
 The ISEL is scored from 0-3 points per question for 16-items, with the total ranging from 0-48 points (higher being more supportive). There are subscales, which are seen below as they map on to the HPAA questions.
 
-
-Variable | Questions
---- | ---
-Appraisal (AP) | 7, 10, 14, 17 
-Tangible (TA) | 8, 9, 13, 16
-Belonging (BE) | 4, 5, 6, 11, 18
-Self-esteem (SE) | 3, 12, 15
+| Variable | Questions |
+| --- | --- |
+| Appraisal (AP) | 7, 10, 14, 17 |
+| Tangible (TA) | 8, 9, 13, 16 |
+| Belonging (BE) | 4, 5, 6, 11, 18 | 
+| Self-esteem (SE) | 3, 12, 15 |
 
 ### ISEL Distribution
 
@@ -179,7 +174,6 @@ gDistributionInterpersonalSubscales <-
 
 # Plot the two ISEL graphs
 grid.arrange(gDistributionInterpersonal, gDistributionInterpersonalSubscales, ncol = 2)
-
 ```
 
 ### Lubben Social Network Scale (LSNS) {.allowframebreaks}
@@ -217,59 +211,58 @@ gDistributionLubben
 # Split into quantiles based on the score (4 quantiles)
 df <-
   within(score_hpa2, {
-    iselgrp = ntile(ISEL, 4) %>% factor
-    apgrp = ntile(AP, 4) %>% factor
-    tagrp = ntile(TA, 4) %>% factor
-    begrp = ntile(BE, 4) %>% factor
-    segrp = ntile(SE, 4) %>% factor
-    lsnsgrp = ntile(LSNS, 4) %>% factor
+    iselgrp <- ntile(ISEL, 4) %>% factor()
+    apgrp <- ntile(AP, 4) %>% factor()
+    tagrp <- ntile(TA, 4) %>% factor()
+    begrp <- ntile(BE, 4) %>% factor()
+    segrp <- ntile(SE, 4) %>% factor()
+    lsnsgrp <- ntile(LSNS, 4) %>% factor()
   })
 
 # New data table
 df <- left_join(df, cs2, by = "ID")
 
 # Comparison for ISEL
-isel_v2 <- 
-  tabular(Format(digits=2)*(HTN + CHD + DIABETES + STROKE) ~ iselgrp, data = na.omit(df)) %>%
-  as.matrix %>%
-  xtable(., caption = 'V2 ISEL Description')  %>%
-  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = 'top', size = "\\small")
+isel_v2 <-
+  tabular(Format(digits = 2) * (HTN + CHD + DIABETES + STROKE) ~ iselgrp, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 ISEL Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
 
 # Comparison for AP
-apgrp_v2 <- 
-  tabular(Format(digits=2)*(HTN + CHD + DIABETES + STROKE) ~ apgrp, data = na.omit(df)) %>%
-  as.matrix %>%
-  xtable(., caption = 'V2 ISEL-AP Description')  %>%
-  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = 'top', size = "\\small")
+apgrp_v2 <-
+  tabular(Format(digits = 2) * (HTN + CHD + DIABETES + STROKE) ~ apgrp, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 ISEL-AP Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
 
 # Comparison for TA
-ta_v2 <- 
-  tabular(Format(digits=2)*(HTN + CHD + DIABETES + STROKE) ~ tagrp, data = na.omit(df)) %>%
-  as.matrix %>%
-  xtable(., caption = 'V2 ISEL-TA Description')  %>%
-  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = 'top', size = "\\small")
+ta_v2 <-
+  tabular(Format(digits = 2) * (HTN + CHD + DIABETES + STROKE) ~ tagrp, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 ISEL-TA Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
 
 # Comparison for BE
-be_v2 <- 
-  tabular(Format(digits=2)*(HTN + CHD + DIABETES + STROKE) ~ begrp, data = na.omit(df)) %>%
-  as.matrix %>%
-  xtable(., caption = 'V2 ISEL-BE Description')  %>%
-  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = 'top', size = "\\small")
+be_v2 <-
+  tabular(Format(digits = 2) * (HTN + CHD + DIABETES + STROKE) ~ begrp, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 ISEL-BE Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
 
 # Comparison for SE
-se_v2 <- 
-  tabular(Format(digits=2)*(HTN + CHD + DIABETES + STROKE) ~ segrp, data = na.omit(df)) %>%
-  as.matrix %>%
-  xtable(., caption = 'V2 ISEL-SE Description')  %>%
-  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = 'top', size = "\\small")
+se_v2 <-
+  tabular(Format(digits = 2) * (HTN + CHD + DIABETES + STROKE) ~ segrp, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 ISEL-SE Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
 
 # Comparison for LSNS
-lsns_v2 <- 
-  tabular(Format(digits=2)*(HTN + CHD + DIABETES + STROKE) ~ lsnsgrp, data = na.omit(df)) %>%
-  as.matrix %>%
-  xtable(., caption = 'V2 LSNS Description')  %>%
-  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = 'top', size = "\\small")
-
+lsns_v2 <-
+  tabular(Format(digits = 2) * (HTN + CHD + DIABETES + STROKE) ~ lsnsgrp, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 LSNS Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
 ```
 
 ### Maastricht Vital Exhaustion Questionnaire
@@ -292,7 +285,7 @@ gDistributionMaastricht <-
   ) +
   scale_y_continuous(labels = percent) +
   theme_minimal()
- 
+
 # Plot
 gDistributionMaastricht
 ```
@@ -303,21 +296,20 @@ gDistributionMaastricht
 
 # Maastricht scores broken down into 4 quantiles
 # Higher the score, the more exhausted you are.
-df <- 
+df <-
   within(score_hpb2, {
-    vitalgrp = ntile(MAASTRICHT, 4) %>% factor
+    vitalgrp <- ntile(MAASTRICHT, 4) %>% factor()
   })
 
 # New data table
 df <- left_join(df, cs2, by = "ID")
 
 # Comparison for MAASTRICHT
-vital_v2 <- 
-  tabular(Format(digits=2)*(HTN + CHD + DIABETES + STROKE) ~ vitalgrp, data = na.omit(df)) %>%
-  as.matrix %>%
-  xtable(., caption = 'V2 MAASTRICHT Description')  %>%
-  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = 'top', size = "\\small")
-
+vital_v2 <-
+  tabular(Format(digits = 2) * (HTN + CHD + DIABETES + STROKE) ~ vitalgrp, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 MAASTRICHT Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
 ```
 
 ### Spielberger Anger Trait Scale 
@@ -329,7 +321,7 @@ df <- score_hpc2
 
 gDistributionSpielbergerV2 <-
   ggplot(df, aes(x = SPIELBERGER, fill = factor(anger_level))) +
-  geom_histogram(aes(y = ..count../sum(..count..)), binwidth = 1) +
+  geom_histogram(aes(y = ..count.. / sum(..count..)), binwidth = 1) +
   labs(
     title = "Distribution of Spielberger Anger Trait Scale [V2]",
     x = "Score",
@@ -337,7 +329,7 @@ gDistributionSpielbergerV2 <-
     fill = "Anger Level"
   ) +
   scale_y_continuous(label = percent) +
-  scale_fill_ptol() + 
+  scale_fill_ptol() +
   theme_minimal()
 
 # Overall Spielberger at V2
@@ -367,48 +359,47 @@ grid.arrange(gDistributionSpielbergerV2, gDistributionSpielbergerV4, ncol = 1)
 # VISIT 2
 # Spielberger anger trait broke down by anger level into quartiles
 # Higher the score, the angrier you are
-df <- 
+df <-
   within(score_hpc2, {
-    angergrp = ntile(SPIELBERGER, 4) %>% factor
+    angergrp <- ntile(SPIELBERGER, 4) %>% factor()
   })
 
 # New data table
 df <- left_join(df, cs2, by = "ID")
 
 # Comparison for Spielberger Anger trait
-anger_v2 <- 
-  tabular(Format(digits=2)*(HTN + CHD + DIABETES + STROKE) ~ angergrp, data = na.omit(df)) %>%
-  as.matrix %>%
-  xtable(., caption = 'V2 Spielberger Description')  %>%
-  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = 'top', size = "\\small")
-
+anger_v2 <-
+  tabular(Format(digits = 2) * (HTN + CHD + DIABETES + STROKE) ~ angergrp, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 Spielberger Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
 ```
 
-### V4 Comparison by Anger
+### V4 Comparison by Anger {.allowframebreaks}
 
 ```{r, results = "asis"}
 
 # VISIT 4
 # Spielberger anger trait broke down by anger level
 # Higher the score, the angrier you are
-df <- 
+df <-
   within(score_hpc4, {
-    angergrp = ntile(SPIELBERGER, 4) %>% factor
+    angergrp <- ntile(SPIELBERGER, 4) %>% factor()
   })
 
 # New data table
 df <- left_join(df, cs4, by = "ID")
 
-anger_v4 <- 
-  tabular(Format(digits=2)*(HTN + CHD + DIABETES + STROKE) ~ angergrp, data = na.omit(df)) %>%
-  as.matrix %>%
-  xtable(., caption = 'V4 Spielberger Description')  %>%
-  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = 'top', size = "\\small")
+anger_v4 <-
+  tabular(Format(digits = 2) * (HTN + CHD + DIABETES + STROKE) ~ angergrp, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V4 Spielberger Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
 ```
 
-## HEART RATE VARIABILITY
+## HRV at V1 ====
 
-### V2 HRV Distribution
+### V1 HRV Distribution
 
 ```{r}
 # Make a long format of variables for visualization
@@ -417,7 +408,7 @@ df <- hrv1 %>% gather(variable, value, -ID)
 # Visualize each distribution pattern
 gDistributionHRV1 <-
   ggplot(df, aes(x = value, fill = variable)) +
-  facet_wrap(~ variable, ncol = 3, scales = "free") +
+  facet_wrap(~variable, ncol = 3, scales = "free") +
   geom_histogram(aes(y = ..count.. / sum(..count..))) +
   scale_y_continuous(labels = percent) +
   scale_fill_ptol() +
@@ -433,7 +424,7 @@ gDistributionHRV1 <-
 gDistributionHRV1
 ```
 
-### V2 HRV Distribution Normalized
+### V1 HRV Distribution Normalized
 
 ```{r}
 # Normalized long table
@@ -457,7 +448,7 @@ gRidgesHRV1 <-
 gRidgesHRV1
 ```
 
-### V2 HRV Correlation Table
+### V1 HRV Correlation Table
 
 ```{r}
 # Correlation tests
@@ -469,6 +460,204 @@ correlation_plot_hrv_v1 <-
 correlation_plot_hrv_v1
 ```
 
+
+### Comparison of V1 HRV to V1 and V2 Demographics 
+
+The HRV data collected at V1 was compared to the demographic data determined at V1 and V2. HRV was broken into quantiles and these subgroups were compared as below.
+
+```{r}
+# HRV data broken into quartile
+df <-
+  within(hrv1, {
+    BPMgrp <- ntile(BPM, 5) %>% factor()
+    HFgrp <- ntile(HF, 5) %>% factor()
+    LFgrp <- ntile(LF, 5) %>% factor()
+    VLFgrp <- ntile(VLF, 5) %>% factor()
+    TPgrp <- ntile(TP, 5) %>% factor()
+    PNN50grp <- ntile(PNN50, 5) %>% factor()
+    RMSSDgrp <- ntile(RMSSD, 5) %>% factor()
+    SDNNgrp <- ntile(SDNN, 5) %>% factor()
+  })
+
+## VISIT 1
+
+# Attempt at large scale visualization through long data
+a <- df[-c(2:9)] %>% gather(., hrv, group = 2:9)
+names(a)[3] <- "group"
+b <- cs1[c(1, 9:11)] %>% gather(., comorbidity, status = 2:4)
+names(b)[3] <- "status"
+tmp <- inner_join(a, b, by = "ID", na.rm = TRUE)
+
+# Data spread out, attempt to plot
+
+gDMxHRV_V1 <-
+  ggplot(na.omit(tmp[tmp$status == 1 & tmp$comorbidity == "DIABETES", ]), aes(x = status, fill = group)) +
+  facet_wrap(~hrv, scales = "fixed") +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -1, position = position_dodge(width = 1)) +
+  labs(
+    title = "V1 Diabetes prevalance by HRV quantiles",
+    y = "Number of patients"
+  ) +
+  ylim(0, 800) +
+  scale_fill_ptol() +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank()
+  )
+
+gCHDxHRV_V1 <-
+  ggplot(na.omit(tmp[tmp$status == 1 & tmp$comorbidity == "CHD", ]), aes(x = status, fill = group)) +
+  facet_wrap(~hrv, scales = "fixed") +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -1, position = position_dodge(width = 1)) +
+  labs(
+    title = "V1 CHD prevalance by HRV quantiles",
+    y = "Number of patients"
+  ) +
+  ylim(0, 400) +
+  scale_fill_ptol() +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank()
+  )
+
+gHTNxHRV_V1 <-
+  ggplot(na.omit(tmp[tmp$status == 1 & tmp$comorbidity == "HTN", ]), aes(x = status, fill = group)) +
+  facet_wrap(~hrv, scales = "fixed") +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -1, position = position_dodge(width = 1)) +
+  labs(
+    title = "V1 HTN prevalance by HRV quantiles",
+    y = "Number of patients"
+  ) +
+  ylim(0, 2000) +
+  scale_fill_ptol() +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank()
+  )
+
+## VISIT 2
+# Attempt at large scale visualization through long data
+a <- df[-c(2:9)] %>% gather(., hrv, group = 2:9)
+names(a)[3] <- "group"
+b <- cs2[c(1, 8:11)] %>% gather(., comorbidity, status = 2:5)
+names(b)[3] <- "status"
+tmp <- inner_join(a, b, by = "ID", na.rm = TRUE)
+
+# Data spread out, attempt to plot
+
+gDMxHRV_V2 <-
+  ggplot(na.omit(tmp[tmp$status == 1 & tmp$comorbidity == "DIABETES", ]), aes(x = status, fill = group)) +
+  facet_wrap(~hrv, scales = "fixed") +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -1, position = position_dodge(width = 1)) +
+  labs(
+    title = "V2 Diabetes prevalance by HRV quantiles",
+    y = "Number of patients"
+  ) +
+  ylim(0, 800) +
+  scale_fill_ptol() +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank()
+  )
+
+gCHDxHRV_V2 <-
+  ggplot(na.omit(tmp[tmp$status == 1 & tmp$comorbidity == "CHD", ]), aes(x = status, fill = group)) +
+  facet_wrap(~hrv, scales = "fixed") +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -1, position = position_dodge(width = 1)) +
+  labs(
+    title = "V2 CHD prevalance by HRV quantiles",
+    y = "Number of patients"
+  ) +
+  ylim(0, 400) +
+  scale_fill_ptol() +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank()
+  )
+
+gHTNxHRV_V2 <-
+  ggplot(na.omit(tmp[tmp$status == 1 & tmp$comorbidity == "HTN", ]), aes(x = status, fill = group)) +
+  facet_wrap(~hrv, scales = "fixed") +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -1, position = position_dodge(width = 1)) +
+  labs(
+    title = "V2 HTN prevalance by HRV quantiles",
+    y = "Number of patients"
+  ) +
+  ylim(0, 2000) +
+  scale_fill_ptol() +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank()
+  )
+
+gSTROKExHRV_V2 <-
+  ggplot(na.omit(tmp[tmp$status == 1 & tmp$comorbidity == "STROKE", ]), aes(x = status, fill = group)) +
+  facet_wrap(~hrv, scales = "fixed") +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -1, position = position_dodge(width = 1)) +
+  labs(
+    title = "V2 STROKE prevalance by HRV quantiles",
+    y = "Number of patients"
+  ) +
+  ylim(0, 100) +
+  scale_fill_ptol() +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank()
+  )
+```
+
+### DM and HRV at V1
+```{r}
+gDMxHRV_V1
+```
+
+### CHD and HRV at V1
+```{r}
+gCHDxHRV_V1
+```
+
+### HTN and HRV at V1
+```{r}
+gHTNxHRV_V1
+```
+
+### DM and HRV at V2
+```{r}
+gDMxHRV_V2
+```
+
+### CHD and HRV at V2
+```{r}
+gCHDxHRV_V2
+```
+
+### HTN and HRV at V2
+```{r}
+gHTNxHRV_V2
+```
+
+### STROKE and HRV at V2
+```{r}
+gSTROKExHRV_V2
+```
+
+
+## HRV at V4 ====
+
 ### V4 HRV Distribution
 
 ```{r}
@@ -478,7 +667,7 @@ df <- hrv4 %>% gather(variable, value, -ID)
 # Visualize each distribution pattern
 gDistributionHRV4 <-
   ggplot(df, aes(x = value, fill = variable)) +
-  facet_wrap(~ variable, ncol = 3, scales = "free") +
+  facet_wrap(~variable, ncol = 3, scales = "free") +
   geom_histogram(aes(y = ..count.. / sum(..count..))) +
   scale_y_continuous(labels = percent) +
   scale_fill_ptol() +
@@ -487,7 +676,7 @@ gDistributionHRV4 <-
     x = "Values",
     y = "Frequency (percent)"
   ) +
-  guides(fill = FALSE) + 
+  guides(fill = FALSE) +
   theme_minimal()
 
 # Dipslay
@@ -530,92 +719,296 @@ correlation_plot_hrv_v4 <-
 correlation_plot_hrv_v4
 ```
 
-## CROSS-SECTIONAL RELATIONSHIP of HRV and STRESS
+### Comparison of V4 HRV to V1 and V4 Demographics
 
-### V2 Distribution by Quartile {.allowframebreaks}
+HRV was collected at visit 4. This was then applied to the cross-sectional data from Visit 1 and from Visit 4.
+
+```{r}
+
+# Data frame using HRV collected at V4
+df <-
+  within(z_hrv4, {
+    BPMgrp <- ntile(BPM, 5) %>% factor()
+    HFgrp <- ntile(HF, 5) %>% factor()
+    LFgrp <- ntile(LF, 5) %>% factor()
+    VLFgrp <- ntile(VLF, 5) %>% factor()
+    TPgrp <- ntile(TP, 5) %>% factor()
+    PNN50grp <- ntile(PNN50, 5) %>% factor()
+    RMSSDgrp <- ntile(RMSSD, 5) %>% factor()
+    SDNNgrp <- ntile(SDNN, 5) %>% factor()
+  })
+
+## Comparison at Visit 1
+
+# Attempt at large scale visualization through long data
+a <- df[-c(2:9)] %>% gather(., hrv, group = 2:9)
+names(a)[3] <- "group"
+b <- cs1[c(1, 9:11)] %>% gather(., comorbidity, status = 2:4)
+names(b)[3] <- "status"
+tmp <- inner_join(a, b, by = "ID", na.rm = TRUE)
+
+# Data spread out, attempt to plot
+
+gDMxHRV_V1 <-
+  ggplot(na.omit(tmp[tmp$status == 1 & tmp$comorbidity == "DIABETES", ]), aes(x = status, fill = group)) +
+  facet_wrap(~hrv, scales = "fixed") +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -1, position = position_dodge(width = 1)) +
+  labs(
+    title = "V1 Diabetes prevalance by HRV quantiles",
+    y = "Number of patients"
+  ) +
+  ylim(0, 600) +
+  scale_fill_ptol() +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank()
+  )
+
+gCHDxHRV_V1 <-
+  ggplot(na.omit(tmp[tmp$status == 1 & tmp$comorbidity == "CHD", ]), aes(x = status, fill = group)) +
+  facet_wrap(~hrv, scales = "fixed") +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -1, position = position_dodge(width = 1)) +
+  labs(
+    title = "V1 CHD prevalance by HRV quantiles",
+    y = "Number of patients"
+  ) +
+  ylim(0, 200) +
+  scale_fill_ptol() +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank()
+  )
+
+gHTNxHRV_V1 <-
+  ggplot(na.omit(tmp[tmp$status == 1 & tmp$comorbidity == "HTN", ]), aes(x = status, fill = group)) +
+  facet_wrap(~hrv, scales = "fixed") +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -1, position = position_dodge(width = 1)) +
+  labs(
+    title = "V1 HTN prevalance by HRV quantiles",
+    y = "Number of patients"
+  ) +
+  ylim(0, 1600) +
+  scale_fill_ptol() +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank()
+  )
+
+## Comparison at Visit 4
+
+# Attempt at large scale visualization through long data
+a <- df[-c(2:9)] %>% gather(., hrv, group = 2:9)
+names(a)[3] <- "group"
+b <- cs4[c(1, 6, 7, 10, 11)] %>% gather(., comorbidity, status = 2:5)
+names(b)[3] <- "status"
+tmp <- inner_join(a, b, by = "ID", na.rm = TRUE)
+
+# Data spread out, attempt to plot
+
+gDMxHRV_V4 <-
+  ggplot(na.omit(tmp[tmp$status == 1 & tmp$comorbidity == "DIABETES", ]), aes(x = status, fill = group)) +
+  facet_wrap(~hrv, scales = "fixed") +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -1, position = position_dodge(width = 1)) +
+  labs(
+    title = "V4 Diabetes prevalance by HRV quantiles",
+    y = "Number of patients"
+  ) +
+  ylim(0, 800) +
+  scale_fill_ptol() +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank()
+  )
+
+gCHDxHRV_V4 <-
+  ggplot(na.omit(tmp[tmp$status == 1 & tmp$comorbidity == "CHD", ]), aes(x = status, fill = group)) +
+  facet_wrap(~hrv, scales = "fixed") +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -1, position = position_dodge(width = 1)) +
+  labs(
+    title = "V4 CHD prevalance by HRV quantiles",
+    y = "Number of patients"
+  ) +
+  ylim(0, 400) +
+  scale_fill_ptol() +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank()
+  )
+
+gHTNxHRV_V4 <-
+  ggplot(na.omit(tmp[tmp$status == 1 & tmp$comorbidity == "HTN", ]), aes(x = status, fill = group)) +
+  facet_wrap(~hrv, scales = "fixed") +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -1, position = position_dodge(width = 1)) +
+  labs(
+    title = "V4 HTN prevalance by HRV quantiles",
+    y = "Number of patients"
+  ) +
+  ylim(0, 1600) +
+  scale_fill_ptol() +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank()
+  )
+
+gSTROKExHRV_V4 <-
+  ggplot(na.omit(tmp[tmp$status == 1 & tmp$comorbidity == "STROKE", ]), aes(x = status, fill = group)) +
+  facet_wrap(~hrv, scales = "fixed") +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -1, position = position_dodge(width = 1)) +
+  labs(
+    title = "V4 Stroke prevalance by HRV quantiles",
+    y = "Number of patients"
+  ) +
+  ylim(0, 100) +
+  scale_fill_ptol() +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank()
+  )
+```
+
+### HTN and HRV at V1
+```{r}
+gHTNxHRV_V1
+```
+
+### DM and HRV at V1
+```{r}
+gDMxHRV_V1
+```
+
+### CHD and HRV at V1
+```{r}
+gCHDxHRV_V1
+```
+
+### HTN and HRV at V4
+```{r}
+gHTNxHRV_V4
+```
+
+### DM and HRV at V4
+```{r}
+gDMxHRV_V4
+```
+
+### CHD at HRV at V4
+```{r}
+gCHDxHRV_V4
+```
+
+### STROKE and HRV at V4
+```{r}
+gSTROKExHRV_V4
+```
+
+
+## CROSS-SECTIONAL RELATIONSHIP of HRV and STRESS ====
+
+### V2 Correlation Table
+
+```{r}
+# Data frame
+df <- inner_join(z_hrv1, scores, by = "ID") %>% na.omit()
+
+ggcorr(df[-1], label = TRUE, label_alpha = TRUE, palette = "BrBG", nbreaks = 10, geom = "tile", label_size = 3)
+```
+### V2 HRV Distribution by Psychosocial Quartile {.allowframebreaks}
 
 ```{r, results='asis'}
-
-# Data from V1 is carried forward impromptu. 
+# Data from V1 is carried forward impromptu.
 # HRV = z_hrv1
 # Stress will be from visit 2 = scores
 
 # Add quartiles for the psychosocial measures and combine
-df <- 
+df <-
   within(scores, {
-    iselgrp = ntile(ISEL, 4) %>% factor
-    apgrp = ntile(AP, 4) %>% factor
-    tagrp = ntile(TA, 4) %>% factor
-    begrp = ntile(BE, 4) %>% factor
-    segrp = ntile(SE, 4) %>% factor
-    lsnsgrp = ntile(LSNS, 4) %>% factor
-    vitalgrp = ntile(MAASTRICHT, 4) %>% factor
-    angergrp = ntile(SPIELBERGER, 4) %>% factor
+    iselgrp <- ntile(ISEL, 4) %>% factor()
+    apgrp <- ntile(AP, 4) %>% factor()
+    tagrp <- ntile(TA, 4) %>% factor()
+    begrp <- ntile(BE, 4) %>% factor()
+    segrp <- ntile(SE, 4) %>% factor()
+    lsnsgrp <- ntile(LSNS, 4) %>% factor()
+    vitalgrp <- ntile(MAASTRICHT, 4) %>% factor()
+    angergrp <- ntile(SPIELBERGER, 4) %>% factor()
   }) %>%
   inner_join(z_hrv1, .)
 
 # Each psychosocial measure and its effect on different HRV measures
 
 # ISEL
-isel_hrv <- 
-  tabular(Format(digits=2)*(BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN)*(mean) ~ iselgrp, data = na.omit(df)) %>%
-  as.matrix %>%
-  xtable(., caption = 'V2 ISEL x HRV Description')  %>%
-  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = 'top', size = "\\small")
+isel_hrv <-
+  tabular(Format(digits = 2) * (BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN) * (mean) ~ iselgrp, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 ISEL x HRV Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
 
 # AP
-ap_hrv <- 
-  tabular(Format(digits=2)*(BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN)*(mean) ~ apgrp, data = na.omit(df)) %>%
-  as.matrix %>%
-  xtable(., caption = 'V2 ISEL-AP x HRV Description')  %>%
-  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = 'top', size = "\\small")
+ap_hrv <-
+  tabular(Format(digits = 2) * (BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN) * (mean) ~ apgrp, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 ISEL-AP x HRV Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
 
 # TA
-ta_hrv <- 
-  tabular(Format(digits=2)*(BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN)*(mean) ~ tagrp, data = na.omit(df)) %>%
-  as.matrix %>%
-  xtable(., caption = 'V2 ISEL-TA x HRV Description')  %>%
-  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = 'top', size = "\\small")
+ta_hrv <-
+  tabular(Format(digits = 2) * (BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN) * (mean) ~ tagrp, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 ISEL-TA x HRV Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
 
 # BE
-be_hrv <- 
-  tabular(Format(digits=2)*(BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN)*(mean) ~ begrp, data = na.omit(df)) %>%
-  as.matrix %>%
-  xtable(., caption = 'V2 ISEL-BE x HRV Description')  %>%
-  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = 'top', size = "\\small")
+be_hrv <-
+  tabular(Format(digits = 2) * (BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN) * (mean) ~ begrp, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 ISEL-BE x HRV Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
 
 # ISEL-SE
-se_hrv <- 
-  tabular(Format(digits=2)*(BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN)*(mean) ~ segrp, data = na.omit(df)) %>%
-  as.matrix %>%
-  xtable(., caption = 'V2 ISEL-SE x HRV Description')  %>%
-  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = 'top', size = "\\small")
+se_hrv <-
+  tabular(Format(digits = 2) * (BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN) * (mean) ~ segrp, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 ISEL-SE x HRV Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
 
 # LSNS
-lsns_hrv <- 
-  tabular(Format(digits=2)*(BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN)*(mean) ~ lsnsgrp, data = na.omit(df)) %>%
-  as.matrix %>%
-  xtable(., caption = 'V2 LSNS x HRV Description')  %>%
-  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = 'top', size = "\\small")
+lsns_hrv <-
+  tabular(Format(digits = 2) * (BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN) * (mean) ~ lsnsgrp, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 LSNS x HRV Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
 
 # MAASTRICHT
-vital_hrv <- 
-  tabular(Format(digits=2)*(BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN)*(mean) ~ vitalgrp, data = na.omit(df)) %>%
-  as.matrix %>%
-  xtable(., caption = 'V2 MAASTRICHT x HRV Description')  %>%
-  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = 'top', size = "\\small")
+vital_hrv <-
+  tabular(Format(digits = 2) * (BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN) * (mean) ~ vitalgrp, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 MAASTRICHT x HRV Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
 
 # SPIELBERGER
-anger_hrv <- 
-  tabular(Format(digits=2)*(BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN)*(mean) ~ angergrp, data = na.omit(df)) %>%
-  as.matrix %>%
-  xtable(., caption = 'V2 SPIELBERGER x HRV Description')  %>%
-  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = 'top', size = "\\small")
+anger_hrv <-
+  tabular(Format(digits = 2) * (BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN) * (mean) ~ angergrp, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 SPIELBERGER x HRV Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
 ```
 
 Each measure of psychosocial stress was divided into four quartiles. These were all compared by HRV measure to examine the relationship. Of note, the ISEL subscales and the Maastricht questionnaire were of significance trends.
 
-### V2 Significant Relationships (Linear Regressions)
+### V2 Significant Relationships by Linear Regression
 
 ```{r, results='asis'}
 # Data frame for V2
@@ -660,7 +1053,7 @@ lm_sig$combination <- paste(lm_sig$psych_variable, lm_sig$hrv_variable)
 # Visualize regressions
 gRegressionsV1 <-
   ggplot(df[df$combination %in% lm_sig$combination, ], aes(x = hrv_value, y = psych_value, colour = psych_variable)) +
-  facet_wrap(~ hrv_variable, scales = "free", ncol = 3) +
+  facet_wrap(~hrv_variable, scales = "free", ncol = 3) +
   geom_smooth(method = "lm", se = TRUE) +
   xlim(-3, 3) +
   labs(
@@ -675,37 +1068,39 @@ gRegressionsV1 <-
 
 # Regression table
 lm_sig[lm_sig$pvalue < .05 & lm_sig$hrv_variable != "BPM", c("psych_variable", "hrv_variable", "pvalue", "rsquare")] %>%
-  xtable(., caption = 'Significant relationships at V2')  %>%
-  print(., caption.placement = 'top', size = "\\small")
+  xtable(., caption = "Significant relationships at V2") %>%
+  print(., caption.placement = "top", size = "\\small")
 ```
 
-### V2 Correlation Table
+
+### V4 Correlation Table
 
 ```{r}
 # Data frame
-df <- inner_join(z_hrv1, scores, by = "ID") %>% na.omit()
+df <- inner_join(z_hrv4, score_hpc4, by = "ID") %>% na.omit()
 
 ggcorr(df[-1], label = TRUE, label_alpha = TRUE, palette = "BrBG", nbreaks = 10, geom = "tile", label_size = 3)
 ```
-### V4 Distribution
+
+### V4 HRV Distribution Psychosocial Quartiles {.allowframebreaks}
 
 ```{r, results='asis'}
 # Scores and DF for analysis
-df <- 
+df <-
   within(score_hpc4, {
-    angergrp = ntile(SPIELBERGER, 4) %>% factor
+    angergrp <- ntile(SPIELBERGER, 4) %>% factor()
   }) %>%
-  inner_join(z_hrv4, .)
+  inner_join(hrv4, .)
 
 # SPIELBERGER
-anger_hrv <- 
-  tabular(Format(digits=2)*(BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN)*(mean) ~ angergrp, data = na.omit(df)) %>%
-  as.matrix %>%
-  xtable(., caption = 'V4 SPIELBERGER x HRV Description')  %>%
-  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = 'top', size = "\\small")
+anger_hrv <-
+  tabular(Format(digits = 2) * (BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN) * (mean) ~ angergrp, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V4 SPIELBERGER x HRV Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
 ```
 
-### V4 Significant Relationships (Linear Regressions)
+### V4 Significant Relationships by Linear Regression
 
 ```{r, results='asis'}
 # Data from visit 4
@@ -747,7 +1142,7 @@ lm_sig$combination <- paste(lm_sig$psych_variable, lm_sig$hrv_variable)
 # Visualize regressions
 gRegressionsV4 <-
   ggplot(df[df$combination %in% lm_sig$combination, ], aes(x = hrv_value, y = psych_value, colour = psych_variable)) +
-  facet_wrap(~ hrv_variable, scales = "free", ncol = 2) +
+  facet_wrap(~hrv_variable, scales = "free", ncol = 2) +
   geom_smooth(method = "lm", se = TRUE) +
   xlim(-3, 3) +
   labs(
@@ -760,22 +1155,18 @@ gRegressionsV4 <-
   theme_minimal()
 
 # Table of significance
-lm_sig[lm_sig$pvalue < .05 & lm_sig$hrv_variable != "BPM", c("psych_variable", "hrv_variable", "pvalue", "rsquare")] %>% 
-  xtable(., caption = 'Significant relationships at V4')  %>%
-  print(., caption.placement = 'top', size = "\\small")
+lm_sig[lm_sig$pvalue < .05 & lm_sig$hrv_variable != "BPM", c("psych_variable", "hrv_variable", "pvalue", "rsquare")] %>%
+  xtable(., caption = "Significant relationships at V4") %>%
+  print(., caption.placement = "top", size = "\\small")
 ```
 
 
-### V4 Correlation Table
 
-```{r}
-# Data frame
-df <- inner_join(z_hrv4, score_hpc4, by = "ID") %>% na.omit()
+## RELATIONSHIP OF HRV WITH TIME ====
+## OUTCOMES ====
 
-ggcorr(df[-1], label = TRUE, label_alpha = TRUE, palette = "BrBG", nbreaks = 10, geom = "tile", label_size = 3)
-```
-
-# CONCLUSION
+# ANALYSIS ====
+# CONCLUSION ====
 
 ### Summary
 
@@ -784,6 +1175,7 @@ ggcorr(df[-1], label = TRUE, label_alpha = TRUE, palette = "BrBG", nbreaks = 10,
 ### Conclusion
 
 ### References {.allowframebreaks}
+
 
 
 

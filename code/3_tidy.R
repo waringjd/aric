@@ -42,13 +42,13 @@ cs1 <- within(cs1, {
   levels(SMOKER) <- c("Current", "Former", "Never", "Unknown")
 
   CHD <- factor(CHD)
-  levels(CHD) <- c("Absent", "Present")
+  levels(CHD) <- c(0, 1)
 
   DIABETES <- factor(DIABETES)
-  levels(DIABETES) <- c("Absent", "Present")
+  levels(DIABETES) <- c(0, 1)
 
   HTN <- factor(HTN)
-  levels(HTN) <- c("Absent", "Present")
+  levels(HTN) <- c(0, 1)
 })
 
 # Clean
@@ -90,16 +90,16 @@ cs2 <- within(cs2, {
   levels(SMOKER) <- c("Current", "Former", "Never", "Unknown")
 
   CHD <- factor(CHD)
-  levels(CHD) <- c("Absent", "Present")
+  levels(CHD) <- c(0, 1)
 
   DIABETES <- factor(DIABETES)
-  levels(DIABETES) <- c("Absent", "Present")
+  levels(DIABETES) <- c(0, 1)
 
   HTN <- factor(HTN)
-  levels(HTN) <- c("Absent", "Present")
+  levels(HTN) <- c(0, 1)
 
   STROKE <- factor(STROKE)
-  levels(STROKE) <- c("Absent", "Present")
+  levels(STROKE) <- c(0, 1)
 })
 
 # Clean up
@@ -142,16 +142,16 @@ cs4 <- within(cs4, {
   levels(SMOKER) <- c("Current", "Former", "Never", "Unknown")
 
   CHD <- factor(CHD)
-  levels(CHD) <- c("Absent", "Present")
+  levels(CHD) <- c(0, 1)
 
   DIABETES <- factor(DIABETES)
-  levels(DIABETES) <- c("Absent", "Present")
+  levels(DIABETES) <- c(0, 1)
 
   HTN <- factor(HTN)
-  levels(HTN) <- c("Absent", "Present")
+  levels(HTN) <- c(0, 1)
 
   STROKE <- factor(STROKE)
-  levels(STROKE) <- c("Absent", "Present")
+  levels(STROKE) <- c(0, 1)
 })
 
 # Clean up
