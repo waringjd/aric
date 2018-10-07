@@ -1,0 +1,99 @@
+---
+title: "Heart Rate Variability and Psychosocial States"
+subtitle: "An Atherosclerotic Risk in Communities Study"
+author: 
+  - Anish Shah, MD^[Department of Medicine, School of Medicine, Emory University]
+  - Amit Shah, MD, MSCR^[Department of Epidemiology, Rollins School of Public Health, Emory University]
+data: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 10pt
+bibliography: hrv-aric.bib
+csl: american-medical-association.csl
+output: 
+  beamer_presentation:
+    colortheme: "beaver"
+    slide_level: 3
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, global_options, include=FALSE}
+
+knitr::opts_chunk$set(
+  cache = TRUE,
+  warning = FALSE,
+  eval = TRUE,
+  echo = FALSE,
+  include = TRUE,
+  message = FALSE,
+  dpi = 600,
+  dev = "png",
+  options("scipen" = 0, "digits" = 3),
+  tinytex.verbose = TRUE
+)
+
+options(xtable.table.placement = "H", xtable.comment = FALSE)
+```
+
+```{r}
+
+# Libraries
+source("1_libraries.R")
+
+# Data intake
+source("2_intake.R")
+
+# Tidy
+source("3_tidy.R")
+```
+
+
+# OVERVIEW ====
+
+### Disclosures and Funding
+
+- Emory University
+- Atherosclerosis Risk in Communities Study
+- No conflicts of interest
+
+### Atherosclerosis Risk in Communities Study
+
+The ARIC study is a prospective epidemiologic study designed to investigate atherosclerosis and its clinical outcomes by cardiovascular risk factors, diseases, and demographics. It involved longitudinal follow-up over five visits from 1987 to 2013, with outcomes updated as of 2015, with over 15k initial participants. It collected measures of psychosocial stress (increased anger, increased vital exhaustion, decreased social support) and HRV over time.
+
+### Background
+
+Psychosocial stressors, such as fatigue and vital exhaustion, are repeatedly shown to be associated independently with MACE.[@Appels1988; @Bogle2018] Stressors and depression are shown to correlate with lower HRV.[@Huang2018; @Vroege2012; @Shah2013] The relationship between autonomic dysfunction and psychosocial stressors is still being studied.
+
+**Does psychosocial stress impact HRV longitudinally, and does their interaction reflect increased cardiovascular mortality?**
+
+### Purpose
+
+Objectives:
+- Examine HRV at V1 and V4
+- Study cross-sectional relationship of stress with outcomes
+- Compare longitudinal pattern of anger from V2 and V4
+- Study effect of stress on HRV
+- Examine relationship of HRV and stress on outcomes
+- Correlate based on gender as well
+
+Hypothesis:
+
+- Increased stress will associate with lower HRV
+- Changes in anger will associate with proportional changes in HRV
+- The interaction of lower HRV and higher stress will have worse outcomes
+  
+### Methods
+
+- Correlation tables
+- Linear regressions
+- Kaplan Meier curves
+- Cox Proportional Hazard Models
+ 
+# PSYCHOSOCIAL STRESS AND OUTCOMES ====
+## Interpersonal Support Evaluation List (ISEL)
+## Lubben Social Network Support (LSNS)
+## Maastricht Vital Exhaustion Questionnaire
+## Spielberger Anger Trait
+# HRV AND OUTCOMES ====
+# HRV AND PSYCHOSOCIAL STRESS ====
+# HRV AND STRESS IMPACT ON OUTCOMES ====
+

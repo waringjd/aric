@@ -203,17 +203,34 @@ codes$chapter[!is.na(codes$icd10)] <- codes$chapter.y[!is.na(codes$icd10)]
 codes <- codes %>% group_by(ID) %>% filter(row_number() == 1)
 codes <- codes[c("ID", "icd9", "icd10", "dx", "subchapter", "chapter")]
 
-# Add teh outcomes back in
-df <- merge(outcomes, codes, by = "ID")
+# Clean up codes
+codes %<>%
+  mutate_at(., vars("dx", "subchapter", "chapter"), tolower) %>%
+  lapply(., gsub, pattern = ',', replacement = '') %>%
+  lapply(., gsub, pattern = 'diseases', replacement = 'disease') %>%
+  as_tibble
+codes %<>% mutate_at(., vars("dx", "subchapter", "chapter"), factor)
+
+# Add the outcomes back in
+df <- inner_join(outcomes, codes, by = "ID")
 
 # Add age as well
 df <- merge(df, cs1[c("ID", "DATE_BIRTH")], by = "ID")
 
 # Add ages
-df$AGE_DEATH <- interval(df$DATE_BIRTH, df$DATE_DEAD) / years(1)
+df$AGE_DEATH <- interval(df$DATE_BIRTH, df$CENSOR) / years(1)
+
+# Add in MI data
+df$DATE_MI[df$DATE_MI == "2015-12-31"] <- NA
+df$MI <- 0
+df$MI[year(df$DATE_MI) < 2015] <- 1
+df$MI %<>% factor
+df$AGE_MI <- df$AGE_DEATH # Which now incorporates the censored data times
+df$AGE_MI[df$MI == 1] <- interval(df$DATE_BIRTH[df$MI == 1], df$DATE_MI[df$MI == 1]) / years(1)
 
 # Final data
-outcomes <- df[c("ID", "DATE_BIRTH", "DATE_MI", "DATE_DEAD", "DEAD", "AGE_DEATH", "UCOD", "icd9", "icd10", "dx", "subchapter", "chapter")] %>% as_tibble()
+outcomes <- df[c("ID", "DATE_BIRTH", "DATE_MI", "MI", "AGE_MI", "DATE_DEAD", "DEAD", "AGE_DEATH", "UCOD", "icd9", "icd10", "dx", "subchapter", "chapter")] %>% as_tibble()
+
 # }}}
 
 ## Psychosocial measures {{{
@@ -398,20 +415,25 @@ df <- df[df$QCFLGV11 != 1, svar]
 # Rename the columns for ease of use
 names(df) <- c("ID", "BPM", "HF", "LF", "VLF", "TP", "PNN50", "RMSSD", "SDNN")
 
+# Addition of studied mathematical modifiers of HRV (Billman, Sacha, etc)
+df$LF_HF <- df$LF / df$HF
+df$RR <- df$BPM/60
+df$HFc <- df$HF/(df$RR)^2
+df$LFc <- df$LF/(df$RR)^2
+df$VLFc <- df$VLF/(df$RR)^2
+df$TPc <- df$TP/(df$RR)^2
+df$SDNNc <- df$SDNN/df$RR
+df$RMSSDc <- df$RMSSD/df$RR
+
 # Only quality HRV data
 hrv1 <- df
 
 # Will need to transform the data prior to utilization
-# Cube root to avoid the zero issues and negatives for scaling
-z_hrv1 <-
-  hrv1 %>%
-  mutate_at(
-    function(x) {
-      sign(x) * abs(x)^(1 / 3)
-      (x - mean(x)) / sd(x)
-    },
-    .vars = vars(-ID)
-  )
+z_hrv1 <- hrv1
+z_hrv1[-1] <-
+  hrv1[-1] %>%
+  scale(., center = TRUE, scale = TRUE)
+
 # }}}
 
 ## Visit 4 HRV data {{{
@@ -441,22 +463,24 @@ df <- df[df$qcflgv4R != 1, svar]
 # Rename variables
 names(df) <- c("ID", "BPM", "HF", "LF", "VLF", "TP", "PNN50", "RMSSD", "SDNN")
 
+# Addition of mathematical modifiers of HRV, both geometric and power spectrum
+df$LF_HF <- df$LF / df$HF
+df$RR <- df$BPM/60
+df$HFc <- df$HF/(df$RR)^2
+df$LFc <- df$LF/(df$RR)^2
+df$VLFc <- df$VLF/(df$RR)^2
+df$TPc <- df$TP/(df$RR)^2
+df$SDNNc <- df$SDNN/df$RR
+df$RMSSDc <- df$RMSSD/df$RR
+
 # Final data frame
 hrv4 <- df
 
 # Will need to transform the data prior to utilization
-
-# Cube root to avoid the zero issues and negatives for scaling
-z_hrv4 <-
-  hrv4 %>%
-  na.omit() %>%
-  mutate_at(
-    function(x) {
-      sign(x) * abs(x)^(1 / 3)
-      (x - mean(x)) / sd(x)
-    },
-    .vars = vars(-ID)
-  )
+z_hrv4 <- hrv4
+z_hrv4[-1] <-
+  hrv4[-1] %>%
+  scale(., center = TRUE, scale = TRUE)
 # }}}
 # }}}
 

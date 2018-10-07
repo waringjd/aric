@@ -31,7 +31,7 @@ knitr::opts_chunk$set(
   tinytex.verbose = TRUE
 )
 
-options(xtable.table.placement = "H")
+options(xtable.table.placement = "H", xtable.comment = FALSE)
 ```
 
 ```{r}
@@ -46,7 +46,7 @@ source("2_intake.R")
 source("3_tidy.R")
 ```
 
-# PURPOSE ====
+# OVERVIEW ====
 
 ## Introduction
 
@@ -83,15 +83,16 @@ Hypothesis:
   
 ## Methods
 
-### Description of data
+### Description of data {.allowframebreaks}
 
 The data has been tidied up to this point. The current variables are:
 
 | Variable | Description |
 | --- | --- |
-| demo | Overall sample description, including death |
+| cs1 | Prevalence of disease at V1 |
 | cs2 | Prevalence of disease at V2 |
 | cs4 | Prevalence of disease at V4 |
+| outcomes | Living status, date of death, and Dx |
 | hpa2 | ISEL and LSNS scores at V2 |
 | hpb2 | Maastrichtt vital exhaustion at V2 |
 | hpc2 | Spielberger Anger at V2 |
@@ -99,8 +100,9 @@ The data has been tidied up to this point. The current variables are:
 | score_hp* | Numeric scaling of psychosocial scores |
 | hrv1 | 2-minute HRV data from V1 |
 | hrv4 | 6-minute HRV data from V4 |
- |
+
 The general paradigm is that HRV will be modulated by stress.
+
 **HRV ~ stress**
 
 HRV remains the outcome variable
@@ -403,7 +405,7 @@ anger_v4 <-
 
 ```{r}
 # Make a long format of variables for visualization
-df <- hrv1 %>% gather(variable, value, -ID)
+df <-z_hrv1 %>% gather(variable, value, -ID)
 
 # Visualize each distribution pattern
 gDistributionHRV1 <-
@@ -662,7 +664,7 @@ gSTROKExHRV_V2
 
 ```{r}
 # Make a long format of variables for visualization
-df <- hrv4 %>% gather(variable, value, -ID)
+df <-z_hrv4 %>% gather(variable, value, -ID)
 
 # Visualize each distribution pattern
 gDistributionHRV4 <-
@@ -916,9 +918,31 @@ gSTROKExHRV_V4
 ```
 
 
-## CROSS-SECTIONAL RELATIONSHIP of HRV and STRESS ====
+## CROSS-SECTIONAL RELATIONSHIP OF HRV AND STRESS ====
 
-### V2 Correlation Table
+### V1 and V4 HRV Measures
+
+```{r}
+# Correlation over time
+inner_join(z_hrv1, z_hrv4, by = "ID") %>%
+  ggcorr(., nbreaks = 10, palette = "BrBG", label = TRUE)
+```
+
+### V2 and V4 Anger Measures
+
+```{r}
+inner_join(score_hpc2, score_hpc4, by = "ID")  %>%
+  ggcorr(., nbreaks = 10, palette = "BrBG", label = TRUE)
+```
+
+
+### V2 Correlation of Stress
+
+```{r}
+ggcorr(scores, nbreaks = 10, palette = "BrBG", label = TRUE)
+```
+
+### V2 Correlation of Stress and HRV
 
 ```{r}
 # Data frame
@@ -926,6 +950,7 @@ df <- inner_join(z_hrv1, scores, by = "ID") %>% na.omit()
 
 ggcorr(df[-1], label = TRUE, label_alpha = TRUE, palette = "BrBG", nbreaks = 10, geom = "tile", label_size = 3)
 ```
+
 ### V2 HRV Distribution by Psychosocial Quartile {.allowframebreaks}
 
 ```{r, results='asis'}
@@ -1160,19 +1185,556 @@ lm_sig[lm_sig$pvalue < .05 & lm_sig$hrv_variable != "BPM", c("psych_variable", "
   print(., caption.placement = "top", size = "\\small")
 ```
 
-
-
-## RELATIONSHIP OF HRV WITH TIME ====
 ## OUTCOMES ====
 
-# ANALYSIS ====
+### Overview of outcomes {.allowframebreaks}
+
+The overall number of deaths recorded are `r sum(outcomes$DEAD)` out of an initial population of `r length(outcomes$ID)`. Of those deaths, `r sum(na.omit(outcomes$DEAD[outcomes$chapter == "diseases of the circulatory system"]))` were from a disease of the circulatory system, defined by ICD.
+
+```{r, results='asis'}
+# Combination of outcomes and initial data
+df <- inner_join(cs1, outcomes[-2], by = "ID")
+
+# Types of cardiovascular death
+tmp <- df[df$chapter == "disease of the circulatory system",]
+tmp$subchapter %<>% factor
+tabular(subchapter ~ DEAD, data = tmp) %>%
+  as.matrix %>%
+  xtable(., caption = "Patient deaths by diagnosis chapters") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
+```
+
+### Overall survival curves
+
+```{r}
+# Overal data set
+df <- inner_join(cs1, outcomes[-2], by = "ID")
+
+# Modify to show cardiovascular deaths versus other deaths
+tmp <- df
+tmp$death_type <- NA
+tmp$death_type[tmp$chapter == "disease of the circulatory system"] <- "cv"
+tmp$death_type[tmp$chapter != "disease of the circulatory system"] <- "other"
+tmp$death_type %<>% factor()
+
+# Cardiovascular mortality curve
+gKaplanOverall <-
+  survfit(Surv(AGE_DEATH, DEAD, type = c("right")) ~ death_type, data = tmp) %>%
+  ggsurvplot(.,
+             data = tmp,
+             risk.table = TRUE,
+             xlim = c(50,90),
+             palette = ptol_pal()(2))
+
+# Plot overall
+gKaplanOverall
+```
+
+### Cardiovascular survival curve
+```{r}
+# Cardiovascular death break down
+cv <- 
+  outcomes[outcomes$chapter == "disease of the circulatory system", -2] %>%
+  inner_join(cs1, ., by = "ID")
+cv$chapter %<>% factor
+cv$subchapter %<>% factor
+levels(cv$subchapter) <- c("CVA", "RHD", "PVD", "PULM", "VEINS", "LYMPH", "HTN", "IHD", "OTHER_CIRC", "OTHER_HEART", "PULM")
+
+# Cardiovascular break down curve
+gKaplanCV <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ subchapter, data = cv) %>%
+  ggsurvplot(., 
+             data = cv,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = "Spectral")
+
+# Plot
+gKaplanCV
+```
+
+### Survival by V1 HRV Measure
+
+```{r}
+# HRV data broken into quartile and combined with outocmes
+df <-
+  within(z_hrv1, {
+    BPMgrp <- ntile(BPM, 5) %>% factor()
+    HFgrp <- ntile(HF, 5) %>% factor()
+    LFgrp <- ntile(LF, 5) %>% factor()
+    VLFgrp <- ntile(VLF, 5) %>% factor()
+    TPgrp <- ntile(TP, 5) %>% factor()
+    PNN50grp <- ntile(PNN50, 5) %>% factor()
+    RMSSDgrp <- ntile(RMSSD, 5) %>% factor()
+    SDNNgrp <- ntile(SDNN, 5) %>% factor()
+  }) %>%
+  inner_join(outcomes, ., by = "ID")
+```
+
+HRV was taken at visit 2 and then broken into quintiles. These were compared over time to look for mortality outcomes by each HRV measure.
+
+### BPM survival
+
+```{r}
+# Visualization
+gKaplanBPM <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ BPMgrp, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = ptol_pal()(5)
+  )
+
+# Plot
+gKaplanBPM
+```
+
+### HF survival
+
+```{r}
+# Visualization
+gKaplanHF <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ HFgrp, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = ptol_pal()(5)
+  )
+
+# Plot
+gKaplanHF
+```
+
+### LF survival
+
+```{r}
+# Visualization
+gKaplanLF <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ LFgrp, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = ptol_pal()(5)
+  )
+
+# Plot
+gKaplanLF
+```
+
+### VLF survival
+
+```{r}
+# Visualization
+gKaplanVLF <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ VLFgrp, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = ptol_pal()(5)
+  )
+
+# Plot
+gKaplanVLF
+```
+
+### TP survival
+
+```{r}
+# Visualization
+gKaplanTP <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ TPgrp, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = ptol_pal()(5)
+  )
+
+# Plot
+gKaplanTP
+```
+
+### PNN50 survival
+
+```{r}
+# Visualization
+gKaplanPNN50 <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ PNN50grp, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = ptol_pal()(5)
+  )
+
+# Plot
+gKaplanPNN50
+```
+
+### RMSSD survival
+
+```{r}
+# Visualization
+gKaplanRMSSD <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ RMSSDgrp, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = ptol_pal()(5)
+  )
+
+# Plot
+gKaplanRMSSD
+```
+
+### SDNN survival
+
+```{r}
+# Visualization
+gKaplanSDNN <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ SDNNgrp, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = ptol_pal()(5)
+  )
+
+# Plot
+gKaplanSDNN
+```
+
+### Survival by V4 HRV Measure
+
+```{r}
+# HRV data broken into quartile and combined with outocmes
+df <-
+  within(z_hrv4, {
+    BPMgrp <- ntile(BPM, 5) %>% factor()
+    HFgrp <- ntile(HF, 5) %>% factor()
+    LFgrp <- ntile(LF, 5) %>% factor()
+    VLFgrp <- ntile(VLF, 5) %>% factor()
+    TPgrp <- ntile(TP, 5) %>% factor()
+    PNN50grp <- ntile(PNN50, 5) %>% factor()
+    RMSSDgrp <- ntile(RMSSD, 5) %>% factor()
+    SDNNgrp <- ntile(SDNN, 5) %>% factor()
+  }) %>%
+  inner_join(outcomes, ., by = "ID")
+```
+
+HRV was taken at visit 2 and then broken into quintiles. These were compared over time to look for mortality outcomes by each HRV measure.
+
+### BPM survival
+
+```{r}
+# Visualization
+gKaplanBPM <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ BPMgrp, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = ptol_pal()(5)
+  )
+
+# Plot
+gKaplanBPM
+```
+
+### HF survival
+
+```{r}
+# Visualization
+gKaplanHF <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ HFgrp, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = ptol_pal()(5)
+  )
+
+# Plot
+gKaplanHF
+```
+
+### LF survival
+
+```{r}
+# Visualization
+gKaplanLF <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ LFgrp, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = ptol_pal()(5)
+  )
+
+# Plot
+gKaplanLF
+```
+
+### VLF survival
+
+```{r}
+# Visualization
+gKaplanVLF <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ VLFgrp, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = ptol_pal()(5)
+  )
+
+# Plot
+gKaplanVLF
+```
+
+### TP survival
+
+```{r}
+# Visualization
+gKaplanTP <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ TPgrp, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = ptol_pal()(5)
+  )
+
+# Plot
+gKaplanTP
+```
+
+### PNN50 survival
+
+```{r}
+# Visualization
+gKaplanPNN50 <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ PNN50grp, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = ptol_pal()(5)
+  )
+
+# Plot
+gKaplanPNN50
+```
+
+### RMSSD survival
+
+```{r}
+# Visualization
+gKaplanRMSSD <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ RMSSDgrp, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = ptol_pal()(5)
+  )
+
+# Plot
+gKaplanRMSSD
+```
+
+### SDNN survival
+
+```{r}
+# Visualization
+gKaplanSDNN <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ SDNNgrp, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = ptol_pal()(5)
+  )
+
+# Plot
+gKaplanSDNN
+```
+
+
+
+
+### Survival by stress measure
+
+```{r}
+# Combine stress groups with outcomes
+df <-
+  within(scores, {
+    ISELgrp <- ntile(ISEL, 4) %>% factor()
+    APgrp <- ntile(AP, 4) %>% factor()
+    TAgrp <- ntile(TA, 4) %>% factor()
+    BEgrp <- ntile(BE, 4) %>% factor()
+    SEgrp <- ntile(SE, 4) %>% factor()
+    LSNSgrp <- ntile(LSNS, 4) %>% factor()
+    VITALgrp <- ntile(MAASTRICHT, 4) %>% factor()
+    ANGERgrp <- ntile(SPIELBERGER, 4) %>% factor()
+  }) %>%
+  inner_join(outcomes, ., by = "ID")
+```
+
+Psychosocial scores taken from V2 were broken into quartiles. These were compared over time to look for mortality outcome patterns.
+
+### ISEL survival
+
+```{r}
+# Visualization
+gKaplanISEL <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ ISELgrp, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = ptol_pal()(5)
+  )
+
+# Plot
+gKaplanISEL
+
+```
+
+### AP survival
+
+```{r}
+# Visualization
+gKaplanAP <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ APgrp, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = ptol_pal()(5)
+  )
+
+# Plot
+gKaplanAP
+
+```
+
+### TA survival
+
+```{r}
+# Visualization
+gKaplanTA <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ TAgrp, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = ptol_pal()(5)
+  )
+
+# Plot
+gKaplanTA
+
+```
+
+### BE survival
+
+```{r}
+# Visualization
+gKaplanBE <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ BEgrp, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = ptol_pal()(5)
+  )
+
+# Plot
+gKaplanBE
+```
+
+### SE survival
+
+```{r}
+# Visualization
+gKaplanSE <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ SEgrp, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = ptol_pal()(5)
+  )
+
+# Plot
+gKaplanSE
+```
+
+### VITAL survival
+
+```{r}
+# Visualization
+gKaplanVITAL <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ VITALgrp, data = df[df$chapter == "disease of the circulatory system",]) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = ptol_pal()(5)
+  )
+
+# Plot
+gKaplanVITAL
+```
+
+### V2 ANGER survival
+
+```{r}
+# Visualization
+gKaplanANGER <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ ANGERgrp, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = ptol_pal()(5)
+  )
+
+# Plot
+gKaplanANGER
+```
+
+### V4 ANGER survival
+
+```{r}
+# combine anger at V4 and outcomes
+df <-
+  within(score_hpc4, {
+    ANGERgrp <- ntile(SPIELBERGER, 4) %>% factor()
+  }) %>%
+  inner_join(outcomes, ., by = "ID")
+
+# Visualization
+gKaplanANGER <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ ANGERgrp, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = ptol_pal()(5)
+  )
+
+# Plot
+gKaplanANGER
+```
+
 # CONCLUSION ====
-
-### Summary
-
-### Major Points
-
-### Conclusion
 
 ### References {.allowframebreaks}
 
