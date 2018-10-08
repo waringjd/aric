@@ -90,10 +90,153 @@ Hypothesis:
  
 # PSYCHOSOCIAL STRESS AND OUTCOMES ====
 ## Interpersonal Support Evaluation List (ISEL)
+### Kaplan Meier curve by ISEL groups for overall survival
+
+```{r}
+# Data
+df <- inner_join(outcomes, cs1, by = "ID") %>%
+  inner_join(., scores, by = "ID")
+
+# ISEL scores are the focus here
+# The higher the group, the more support available
+# Survival object
+fit <- survfit(Surv(AGE_DEATH, DEAD) ~ ISELg + GENDER, data = df)
+ggsurvplot(fit,
+           xlim = c(50,90),
+           risk.table = TRUE, 
+           surv.median.line = "hv",
+           pval = TRUE,
+           conf.int = TRUE,
+           xlab = "Time in years before event",
+           ylab = "Survival probability",
+           title = "KM = ISEL quartile x Gender",
+           ggtheme = theme_minimal(),
+           palette = ptol_pal()(8)
+           )
+```
+
 ## Lubben Social Network Support (LSNS)
+### Kaplan Meier curve by Lubben Social Support Network for overall survival
+
+```{r}
+# Data
+df <- inner_join(outcomes, cs1, by = "ID") %>%
+  inner_join(., scores, by = "ID")
+
+# ISEL scores are the focus here
+# The higher the group, the more support available
+# Survival object
+fit <- survfit(Surv(AGE_DEATH, DEAD) ~ LSNSg + GENDER, data = df)
+ggsurvplot(fit,
+           xlim = c(50,90),
+           risk.table = TRUE, 
+           surv.median.line = "hv",
+           pval = TRUE,
+           conf.int = TRUE,
+           xlab = "Time in years before event",
+           ylab = "Survival probability",
+           title = "KM = Lubben support quartile x Gender",
+           ggtheme = theme_minimal(),
+           palette = ptol_pal()(4)
+           )
+```
 ## Maastricht Vital Exhaustion Questionnaire
+### Kaplan Meier curve by Maastricht groups for overall survival
+
+```{r}
+# Data
+df <- inner_join(outcomes, cs1, by = "ID") %>%
+  inner_join(., scores, by = "ID")
+
+# ISEL scores are the focus here
+# The higher the group, the more support available
+# Survival object
+fit <- survfit(Surv(AGE_DEATH, DEAD) ~ MAASTRICHTg + GENDER, data = df)
+ggsurvplot(fit,
+           xlim = c(50,90),
+           risk.table = TRUE, 
+           surv.median.line = "hv",
+           pval = TRUE,
+           conf.int = TRUE,
+           xlab = "Time in years before event",
+           ylab = "Survival probability",
+           title = "KM = Maastricht quartile x Gender",
+           ggtheme = theme_minimal(),
+           palette = ptol_pal()(8)
+           )
+```
 ## Spielberger Anger Trait
+### Kaplan Meier curve by Maastricht groups for overall survival
+
+```{r}
+# Data
+df <- inner_join(outcomes, cs1, by = "ID") %>%
+  inner_join(., scores, by = "ID")
+
+# ISEL scores are the focus here
+# The higher the group, the more support available
+# Survival object
+fit <- survfit(Surv(AGE_DEATH, DEAD) ~ anger_level + GENDER, data = df)
+ggsurvplot(fit,
+           xlim = c(50,90),
+           risk.table = TRUE, 
+           surv.median.line = "hv",
+           pval = TRUE,
+           conf.int = TRUE,
+           xlab = "Time in years before event",
+           ylab = "Survival probability",
+           title = "KM = Spielberger anger level x Gender",
+           ggtheme = theme_minimal(),
+           palette = ptol_pal()(6)
+           )
+```
 # HRV AND OUTCOMES ====
+## Power spectral analysis
+### High frequency Kaplan Meier curve for overall survival
+
+```{r}
+# Data
+df <- inner_join(outcomes, cs1, by = "ID") %>%
+  inner_join(., hrv1, by = "ID")
+
+# Kaplan Meier curve
+fit <- survfit(Surv(AGE_DEATH, DEAD) ~ HFg + GENDER, data = df)
+ggsurvplot(fit,
+           xlim = c(50,90),
+           risk.table = TRUE, 
+           surv.median.line = "hv",
+           pval = TRUE,
+           conf.int = TRUE,
+           xlab = "Time in years before event",
+           ylab = "Survival probability",
+           title = "KM = HF quartile x Gender",
+           ggtheme = theme_minimal(),
+           palette = ptol_pal()(8)
+)
+```
+### High frequency (corrected) KM for overall survival
+
+```{r}
+# Data
+df <- inner_join(outcomes, cs1, by = "ID") %>%
+  inner_join(., hrv1, by = "ID")
+
+# Kaplan Meier curve
+fit <- survfit(Surv(AGE_DEATH, DEAD) ~ HFcg + GENDER, data = df)
+ggsurvplot(fit,
+           xlim = c(50,90),
+           risk.table = TRUE, 
+           surv.median.line = "hv",
+           pval = TRUE,
+           conf.int = TRUE,
+           xlab = "Time in years before event",
+           ylab = "Survival probability",
+           title = "KM = HF quartile x Gender",
+           ggtheme = theme_minimal(),
+           palette = ptol_pal()(8)
+)
+```
+
 # HRV AND PSYCHOSOCIAL STRESS ====
 # HRV AND STRESS IMPACT ON OUTCOMES ====
 

@@ -169,7 +169,8 @@ svar <- c(
   "C7_DATEPROC",
   "UCOD",
   "DATED15",
-  "DEAD15"
+  "DEAD15",
+  "CENSDAT7"
 )
 outcomes <- outcomes[c(svar)]
 
@@ -182,8 +183,11 @@ outcomes$C7_DATEPROC <- mdy(outcomes$C7_DATEPROC)
 # Date of death
 outcomes$DATED15 <- dmy(outcomes$DATED15)
 
+# Censor date
+outcomes$CENSDAT7 <- dmy(outcomes$CENSDAT7)
+
 # Clean up outcomes
-outcomes <- outcomes[c("ID", "C7_DATEMI", "UCOD", "DATED15", "DEAD15")]
-names(outcomes) <- c("ID", "DATE_MI", "UCOD", "DATE_DEAD", "DEAD")
+outcomes <- outcomes[c("ID", "C7_DATEMI", "UCOD", "DATED15", "DEAD15", "CENSDAT7")]
+names(outcomes) <- c("ID", "DATE_MI", "UCOD", "DATE_DEAD", "DEAD", "CENSOR")
 # }}}
 

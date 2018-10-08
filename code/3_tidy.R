@@ -425,6 +425,41 @@ df$TPc <- df$TP/(df$RR)^2
 df$SDNNc <- df$SDNN/df$RR
 df$RMSSDc <- df$RMSSD/df$RR
 
+# Quintile based groups
+df <-
+  within(df, {
+    HFg <- cut2(HF, g = 4)
+    levels(HFg) <- 1:4
+    LFg <- cut2(HF, g = 4)
+    levels(LFg) <- 1:4
+    VLFg <- cut2(VLF, g = 4)
+    levels(VLFg) <- 1:4
+    TPg <- cut2(TP, g = 4)
+    levels(TPg) <- 1:4
+    PNN50g <- cut2(PNN50, g = 4)
+    levels(PNN50g) <- 1:4
+    RMSSDg <- cut2(RMSSD, g = 4)
+    levels(RMSSDg) <- 1:4
+    SDNNg <- cut2(SDNN, g = 4)
+    levels(SDNNg) <- 1:4
+    LF_HFg <- cut2(LF_HF, g = 4)
+    levels(LF_HFg) <- 1:4
+    RRg <- cut2(RR, g = 4)
+    levels(RRg) <- 1:4
+    HFcg <- cut2(HFc, g = 4)
+    levels(HFcg) <- 1:4
+    LFcg <- cut2(LFc, g = 4)
+    levels(LFcg) <- 1:4
+    VLFg <- cut2(VLF, g = 4)
+    levels(VLFg) <- 1:4
+    TPcg <- cut2(TPc, g = 4)
+    levels(TPcg) <- 1:4
+    SDNNcg <- cut2(SDNNc, g = 4)
+    levels(SDNNcg) <- 1:4
+    RMSSDcg <- cut2(RMSSDc, g = 4)
+    levels(RMSSDcg) <- 1:4
+  })
+
 # Only quality HRV data
 hrv1 <- df
 
@@ -489,6 +524,27 @@ z_hrv4[-1] <-
 # Combined psychosocial scores
 tmp <- full_join(score_hpa2, score_hpb2)
 scores <- full_join(tmp, score_hpc2)
+
+# Add grouping items and quartiles to the psychosocial scores
+scores <-
+  within(scores, {
+    ISELg <- cut2(ISEL, g = 4)
+    levels(ISELg) <- 1:4
+    APg <- cut2(AP, g = 4)
+    levels(APg) <- 1:4
+    TAg <- cut2(TA, g = 4)
+    levels(TAg) <- 1:4
+    BEg <- cut2(BE, g = 4)
+    levels(BEg) <- 1:4
+    SEg <- cut2(SE, g = 4)
+    levels(SEg) <- 1:4
+    LSNSg <- cut2(LSNS, g = 4)
+    levels(LSNSg) <- 1:4
+    MAASTRICHTg <- cut2(MAASTRICHT, g = 4)
+    levels(MAASTRICHTg) <- 1:4
+    SPIELBERGERg <- cut2(SPIELBERGER, g = 4)
+    levels(SPIELBERGERg) <- 1:4
+  })
 
 # Clean up of memory-clogging junk
 rm(df, questions, svar, v1d, v2d, v4d, tmp)
