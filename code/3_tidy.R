@@ -238,9 +238,6 @@ outcomes <- df[c("ID", "DATE_BIRTH", "DATE_MI", "MI", "AGE_MI", "DATE_DEAD", "DE
 ## HPAA {{{
 # The HPAA file includes the Interpersonal Support and Evaluation List (ISEL) and the Lubben Social Network Scale (LSNS)
 
-# Select social support data
-df <- hpa2
-
 # ISEL is 3:18
 # LSNS is 19:29
 
@@ -253,27 +250,22 @@ lsns <- c("HPAA19", "HPAA20", "HPAA21", "HPAA22", "HPAA23", "HPAA24", "HPAA25", 
 # Class of variables
 
 # Trimmed HPAA data
-df$placeholder <- NA
-df <- df[c("ID", "placeholder", isel, lsns)]
+df <- hpa2[c("ID", isel, lsns)]
 
 # Create factors for ISEL
 # Positive factors (higher score is better)
-df[c(3, 6, 7, 8, 11, 12, 13, 14, 16, 18)] <-
-  df[c(3, 6, 7, 8, 11, 12, 13, 14, 16, 18)] %>%
+df[c(3, 6, 7, 8, 11, 12, 13, 14, 16, 18)] %<>%
   mutate_all(funs(recode(., "A" = 0, "B" = 1, "C" = 2, "D" = 3)))
 
 # Negative or reversed choices
-df[c(4, 5, 9, 10, 15, 17)] <-
-  df[c(4, 5, 9, 10, 15, 17)] %>%
+df[c(4, 5, 9, 10, 15, 17)] %<>%
   mutate_all(funs(recode(., "A" = 3, "B" = 2, "C" = 1, "D" = 0)))
 
 # Create factors and scores for LSNS
-df[c(19, 20, 21, 22, 23, 24)] <-
-  df[c(19, 20, 21, 22, 23, 24)] %>%
+df[c(19, 20, 21, 22, 23, 24)] %<>%
   mutate_all(funs(recode(., "A" = 0, "B" = 1, "C" = 2, "D" = 3, "E" = 4, "F" = 5)))
 
-df[c(25, 26)] <-
-  df[c(25, 26)] %>%
+df[c(25, 26)] %<>%
   mutate_all(funs(recode(., "A" = 5, "B" = 4, "C" = 3, "D" = 2, "E" = 1, "F" = 0)))
 
 df <- within(df, {
@@ -428,45 +420,44 @@ df$RMSSDc <- df$RMSSD/df$RR
 # Quintile based groups
 df <-
   within(df, {
-    HFg <- cut2(HF, g = 4)
-    levels(HFg) <- 1:4
-    LFg <- cut2(HF, g = 4)
-    levels(LFg) <- 1:4
-    VLFg <- cut2(VLF, g = 4)
-    levels(VLFg) <- 1:4
-    TPg <- cut2(TP, g = 4)
-    levels(TPg) <- 1:4
-    PNN50g <- cut2(PNN50, g = 4)
-    levels(PNN50g) <- 1:4
-    RMSSDg <- cut2(RMSSD, g = 4)
-    levels(RMSSDg) <- 1:4
-    SDNNg <- cut2(SDNN, g = 4)
-    levels(SDNNg) <- 1:4
-    LF_HFg <- cut2(LF_HF, g = 4)
-    levels(LF_HFg) <- 1:4
-    RRg <- cut2(RR, g = 4)
-    levels(RRg) <- 1:4
-    HFcg <- cut2(HFc, g = 4)
-    levels(HFcg) <- 1:4
-    LFcg <- cut2(LFc, g = 4)
-    levels(LFcg) <- 1:4
-    VLFg <- cut2(VLF, g = 4)
-    levels(VLFg) <- 1:4
-    TPcg <- cut2(TPc, g = 4)
-    levels(TPcg) <- 1:4
-    SDNNcg <- cut2(SDNNc, g = 4)
-    levels(SDNNcg) <- 1:4
-    RMSSDcg <- cut2(RMSSDc, g = 4)
-    levels(RMSSDcg) <- 1:4
+    HFg <- cut2(HF, g = 5)
+    levels(HFg) <- 1:5
+    LFg <- cut2(HF, g = 5)
+    levels(LFg) <- 1:5
+    VLFg <- cut2(VLF, g = 5)
+    levels(VLFg) <- 1:5
+    TPg <- cut2(TP, g = 5)
+    levels(TPg) <- 1:5
+    PNN50g <- cut2(PNN50, g = 5)
+    levels(PNN50g) <- 1:5
+    RMSSDg <- cut2(RMSSD, g = 5)
+    levels(RMSSDg) <- 1:5
+    SDNNg <- cut2(SDNN, g = 5)
+    levels(SDNNg) <- 1:5
+    LF_HFg <- cut2(LF_HF, g = 5)
+    levels(LF_HFg) <- 1:5
+    RRg <- cut2(RR, g = 5)
+    levels(RRg) <- 1:5
+    HFcg <- cut2(HFc, g = 5)
+    levels(HFcg) <- 1:5
+    LFcg <- cut2(LFc, g = 5)
+    levels(LFcg) <- 1:5
+    VLFg <- cut2(VLF, g = 5)
+    levels(VLFg) <- 1:5
+    TPcg <- cut2(TPc, g = 5)
+    levels(TPcg) <- 1:5
+    SDNNcg <- cut2(SDNNc, g = 5)
+    levels(SDNNcg) <- 1:5
+    RMSSDcg <- cut2(RMSSDc, g = 5)
+    levels(RMSSDcg) <- 1:5
   })
 
 # Only quality HRV data
 hrv1 <- df
 
 # Will need to transform the data prior to utilization
-z_hrv1 <- hrv1
-z_hrv1[-1] <-
-  hrv1[-1] %>%
+z_hrv1 <- hrv1[1:17]
+z_hrv1[-1] %<>%
   scale(., center = TRUE, scale = TRUE)
 
 # }}}
@@ -508,13 +499,47 @@ df$TPc <- df$TP/(df$RR)^2
 df$SDNNc <- df$SDNN/df$RR
 df$RMSSDc <- df$RMSSD/df$RR
 
+# Quintile based groups
+df <-
+  within(df, {
+    HFg <- cut2(HF, g = 5)
+    levels(HFg) <- 1:5
+    LFg <- cut2(HF, g = 5)
+    levels(LFg) <- 1:5
+    VLFg <- cut2(VLF, g = 5)
+    levels(VLFg) <- 1:5
+    TPg <- cut2(TP, g = 5)
+    levels(TPg) <- 1:5
+    PNN50g <- cut2(PNN50, g = 5)
+    levels(PNN50g) <- 1:5
+    RMSSDg <- cut2(RMSSD, g = 5)
+    levels(RMSSDg) <- 1:5
+    SDNNg <- cut2(SDNN, g = 5)
+    levels(SDNNg) <- 1:5
+    LF_HFg <- cut2(LF_HF, g = 5)
+    levels(LF_HFg) <- 1:5
+    RRg <- cut2(RR, g = 5)
+    levels(RRg) <- 1:5
+    HFcg <- cut2(HFc, g = 5)
+    levels(HFcg) <- 1:5
+    LFcg <- cut2(LFc, g = 5)
+    levels(LFcg) <- 1:5
+    VLFg <- cut2(VLF, g = 5)
+    levels(VLFg) <- 1:5
+    TPcg <- cut2(TPc, g = 5)
+    levels(TPcg) <- 1:5
+    SDNNcg <- cut2(SDNNc, g = 5)
+    levels(SDNNcg) <- 1:5
+    RMSSDcg <- cut2(RMSSDc, g = 5)
+    levels(RMSSDcg) <- 1:5
+  })
+
 # Final data frame
 hrv4 <- df
 
 # Will need to transform the data prior to utilization
-z_hrv4 <- hrv4
-z_hrv4[-1] <-
-  hrv4[-1] %>%
+z_hrv4 <- hrv4[1:17]
+z_hrv4[-1] %<>%
   scale(., center = TRUE, scale = TRUE)
 # }}}
 # }}}

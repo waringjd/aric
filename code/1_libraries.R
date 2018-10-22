@@ -10,6 +10,7 @@ knitr,
 tinytex,
 kableExtra,
 citr,
+tufte,
 
 # Visualization
 scales,
@@ -18,6 +19,7 @@ reshape2,
 gridExtra,
 ggridges,
 RColorBrewer,
+viridis,
 GGally,
 
 # Statistical tools
@@ -36,6 +38,8 @@ tables,
 compareGroups,
 Epi,
 rcompanion,
+MASS,
+stargazer,
 
 # Tidying and cleaning data
 magrittr,

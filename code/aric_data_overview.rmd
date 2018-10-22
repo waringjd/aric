@@ -1,0 +1,1796 @@
+---
+title: "Heart Rate Variability and Psychosocial States"
+subtitle: "An Atherosclerotic Risk in Communities Study"
+author: 
+  - Anish Shah, MD^[Department of Medicine, School of Medicine, Emory University]
+  - Amit Shah, MD, MSCR^[Department of Epidemiology, Rollins School of Public Health, Emory University]
+data: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 10pt
+bibliography: hrv.bib
+csl: american-medical-association.csl
+output: 
+  beamer_presentation:
+    colortheme: "beaver"
+    slide_level: 3
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, global_options, include=FALSE}
+
+knitr::opts_chunk$set(
+  cache = TRUE,
+  warning = FALSE,
+  eval = TRUE,
+  echo = FALSE,
+  include = TRUE,
+  message = FALSE,
+  dpi = 600,
+  dev = "png",
+  options("scipen" = 0, "digits" = 3),
+  tinytex.verbose = TRUE
+)
+
+options(xtable.table.placement = "H", xtable.comment = FALSE)
+```
+
+```{r}
+
+# Libraries
+source("1_libraries.R")
+
+# Data intake
+source("2_intake.R")
+
+# Tidy
+source("3_tidy.R")
+```
+
+# OVERVIEW ====
+
+## Introduction
+
+### Disclosures and Funding
+
+- Emory University
+- Atherosclerosis Risk in Communities Study
+- No conflicts of interest
+
+### Atherosclerosis Risk in Communities Study
+
+The ARIC study is a prospective epidemiologic study designed to investigate atherosclerosis and its clinical outcomes by cardiovascular risk factors, diseases, and demographics. It involved longitudinal follow-up over five visits from 1987 to 2013, with outcomes updated as of 2015, with over 15k initial participants. It collected measures of psychosocial stress (increased anger, increased vital exhaustion, decreased social support) and HRV over time.
+
+### Background
+
+Psychosocial stressors, such as fatigue and vital exhaustion, are repeatedly shown to be associated independently with MACE.[@Appels1988; @Bogle2018] Stressors and depression are shown to correlate with lower HRV.[@Huang2018; @Vroege2012; @Shah2013] The relationship between autonomic dysfunction and psychosocial stressors is still being studied.
+
+**Does psychosocial stressor impact HRV longitudinally, and does their interaction reflect increased cardiovascular mortality?**
+
+### Purpose
+
+Objectives:
+
+- Examine HRV from V1 and V4
+- Study the relationship of anger from V2 to V4
+- Cross-sectional relationship with vital exhaustion / social support at V2
+- Compare these factors with longitudinal outcomes
+
+Hypothesis:
+
+- increased stress will associate with lower HRV
+- changes in stress will associate with proportional changes in HRV
+- the interaction of lower HRV and higher stress will have increased risk of mortality
+  
+## Methods
+
+### Description of data {.allowframebreaks}
+
+The data has been tidied up to this point. The current variables are:
+
+| Variable | Description |
+| --- | --- |
+| cs1 | Prevalence of disease at V1 |
+| cs2 | Prevalence of disease at V2 |
+| cs4 | Prevalence of disease at V4 |
+| outcomes | Living status, date of death, and Dx |
+| hpa2 | ISEL and LSNS scores at V2 |
+| hpb2 | Maastrichtt vital exhaustion at V2 |
+| hpc2 | Spielberger Anger at V2 |
+| hpc4 | Spielberger Anger at V4 |
+| score_hp* | Numeric scaling of psychosocial scores |
+| hrv1 | 2-minute HRV data from V1 |
+| hrv4 | 6-minute HRV data from V4 |
+
+The general paradigm is that HRV will be modulated by stress.
+
+**HRV ~ stress**
+
+HRV remains the outcome variable
+Emotional state is the exposure, which could be binary by median, or based on standard deviations. 
+
+1. Exposed: high stress
+1. Unexposed: low stress
+
+# DESCRIPTION ====
+
+## PSYCHOSOCIAL DESCRIPTION ====
+
+### Initial Population
+
+```{r, results = "asis"}
+
+# The initial population
+char_v1 <-
+  tabular(Format(digits = 2) * (HTN + CHD + DIABETES) + Format(digits = 2) * (AGE_V1 + BMI) * (mean + sd) ~ GENDER + (n = 1), data = na.omit(cs1)) %>%
+  as.matrix() %>%
+  xtable(., caption = "Initial Cohort Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
+```
+
+### Interpersonal Support Evaluation List (ISEL)
+
+The ISEL is scored from 0-3 points per question for 16-items, with the total ranging from 0-48 points (higher being more supportive). There are subscales, which are seen below as they map on to the HPAA questions.
+
+| Variable | Questions |
+| --- | --- |
+| Appraisal (AP) | 7, 10, 14, 17 |
+| Tangible (TA) | 8, 9, 13, 16 |
+| Belonging (BE) | 4, 5, 6, 11, 18 | 
+| Self-esteem (SE) | 3, 12, 15 |
+
+### ISEL Distribution
+
+```{r}
+
+# Looking at scores from ISEL and subgroups
+df <-
+  score_hpa2[c("ID", "LSNS", "ISEL", "AP", "TA", "BE", "SE")] %>%
+  gather(variable, value, -ID)
+
+# ISEL normality
+# Visualize the overall score distribution
+# Mostly normal, slightly skewed
+gDistributionInterpersonal <-
+  ggplot(df[df$variable == "ISEL", ], aes(x = value)) +
+  geom_histogram(binwidth = 1) +
+  labs(
+    title = "Distribution of ISEL total score",
+    x = "Score",
+    y = "Frequency"
+  ) +
+  theme_minimal()
+
+# Visualize distribution of subscales
+# Have variety of scews, do not "appear" normal
+gDistributionInterpersonalSubscales <-
+  ggplot(df[df$variable != "ISEL" & df$variable != "LSNS", ], aes(x = value, y = variable)) +
+  geom_density_ridges2(aes(fill = variable), stat = "binline", binwidth = 1, colour = "white", scale = 1.6) +
+  labs(
+    title = "Distribution of ISEL subscales",
+    x = "Points",
+    y = "Frequency"
+  ) +
+  guides(fill = FALSE) +
+  scale_fill_ptol() +
+  theme_minimal()
+
+# Plot the two ISEL graphs
+grid.arrange(gDistributionInterpersonal, gDistributionInterpersonalSubscales, ncol = 2)
+```
+
+### Lubben Social Network Scale (LSNS) {.allowframebreaks}
+
+The LSNS is scored from 0-5 points for an 10-item questionnaire (the original form), with the total ranging from 0-50 points (higher more supportive). The subscales haven't been validated. The scores were normalized for ease of comparison.
+
+```{r}
+
+# Looking at scores from LSNS
+df <-
+  score_hpa2[c("ID", "LSNS")] %>%
+  gather(variable, value, -ID)
+
+# Visualize the overall score distribution
+# Mostly normal, slightly skewed
+gDistributionLubben <-
+  ggplot(df[df$variable == "LSNS", ], aes(x = value)) +
+  geom_histogram(binwidth = 1) +
+  labs(
+    title = "Distribution of LSNS total score",
+    x = "Score",
+    y = "Frequency"
+  ) +
+  theme_minimal()
+
+# Plot this
+gDistributionLubben
+```
+
+### V2 Comparison by Social Support {.allowframebreaks}
+
+```{r, results='asis'}
+# Data, combining ISEL with CS2
+df <- left_join(scores, cs2, by = "ID")
+
+# Comparison for ISEL
+ISEL_v2 <-
+  tabular(Format(digits = 2) * (HTN + CHD + DIABETES + STROKE) ~ ISELg, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 ISEL Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
+
+# Comparison for AP
+APg_v2 <-
+  tabular(Format(digits = 2) * (HTN + CHD + DIABETES + STROKE) ~ APg, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 ISEL-AP Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
+
+# Comparison for TA
+ta_v2 <-
+  tabular(Format(digits = 2) * (HTN + CHD + DIABETES + STROKE) ~ TAg, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 ISEL-TA Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
+
+# Comparison for BE
+be_v2 <-
+  tabular(Format(digits = 2) * (HTN + CHD + DIABETES + STROKE) ~ BEg, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 ISEL-BE Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
+
+# Comparison for SE
+se_v2 <-
+  tabular(Format(digits = 2) * (HTN + CHD + DIABETES + STROKE) ~ SEg, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 ISEL-SE Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
+
+# Comparison for LSNS
+LSNS_v2 <-
+  tabular(Format(digits = 2) * (HTN + CHD + DIABETES + STROKE) ~ LSNSg, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 LSNS Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
+```
+
+### Maastricht Vital Exhaustion Questionnaire
+
+```{r}
+
+# Overall Maastricht data frame
+df <-
+  score_hpb2 %>%
+  gather(variable, value, -ID)
+
+# Visualization
+gDistributionMaastricht <-
+  ggplot(df, aes(x = value)) +
+  geom_histogram(aes(y = ..count.. / sum(..count..)), binwidth = 1) +
+  labs(
+    title = "Distribution of Maastricht Exhaustion Scale",
+    x = "Score",
+    y = "Frequency"
+  ) +
+  scale_y_continuous(labels = percent) +
+  theme_minimal()
+
+# Plot
+gDistributionMaastricht
+```
+
+### V2 Comparison by Vital Exhaustion
+
+```{r, results = "asis"}
+
+# Maastricht scores broken down into 4 quantiles
+# Higher the score, the more exhausted you are.
+df <-
+  within(score_hpb2, {
+    vitalg <- ntile(MAASTRICHT, 4) %>% factor()
+  })
+
+# New data table
+df <- left_join(df, cs2, by = "ID")
+
+# Comparison for MAASTRICHT
+vital_v2 <-
+  tabular(Format(digits = 2) * (HTN + CHD + DIABETES + STROKE) ~ vitalg, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 MAASTRICHT Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
+```
+
+### Spielberger Anger Trait Scale 
+
+```{r}
+
+# Overall Spielberger at V2
+df <- score_hpc2
+
+gDistributionSpielbergerV2 <-
+  ggplot(df, aes(x = SPIELBERGER, fill = factor(anger_level))) +
+  geom_histogram(aes(y = ..count.. / sum(..count..)), binwidth = 1) +
+  labs(
+    title = "Distribution of Spielberger Anger Trait Scale [V2]",
+    x = "Score",
+    y = "Frequency",
+    fill = "Anger Level"
+  ) +
+  scale_y_continuous(label = percent) +
+  scale_fill_ptol() +
+  theme_minimal()
+
+# Overall Spielberger at V2
+df <- score_hpc4
+
+gDistributionSpielbergerV4 <-
+  ggplot(df, aes(x = SPIELBERGER, fill = factor(anger_level))) +
+  geom_histogram(aes(y = ..count.. / sum(..count..)), binwidth = 1) +
+  labs(
+    title = "Distribution of Spielberger Anger Trait Scale [V4]",
+    x = "Score",
+    y = "Frequency",
+    fill = "Anger Level"
+  ) +
+  scale_y_continuous(label = percent) +
+  scale_fill_ptol() +
+  theme_minimal()
+
+# Plot side by side
+grid.arrange(gDistributionSpielbergerV2, gDistributionSpielbergerV4, ncol = 1)
+```
+
+### V2 Comparison by Anger
+
+```{r, results = "asis"}
+
+# VISIT 2
+# Spielberger anger trait broke down by anger level into quartiles
+# Higher the score, the angrier you are
+
+# New data table
+df <- left_join(scores, cs2, by = "ID")
+
+# Comparison for Spielberger Anger trait
+anger_v2 <-
+  tabular(Format(digits = 2) * (HTN + CHD + DIABETES + STROKE) ~ SPIELBERGERg, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 Spielberger Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
+```
+
+### V4 Comparison by Anger {.allowframebreaks}
+
+```{r, results = "asis"}
+
+# VISIT 4
+# Spielberger anger trait broke down by anger level
+# Higher the score, the angrier you are
+df <-
+  within(score_hpc4, {
+    SPIELBERGERg <- ntile(SPIELBERGER, 4) %>% factor()
+  })
+
+# New data table
+df <- left_join(df, cs4, by = "ID")
+
+anger_v4 <-
+  tabular(Format(digits = 2) * (HTN + CHD + DIABETES + STROKE) ~ SPIELBERGERg, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V4 Spielberger Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
+```
+
+## HRV at V1 ====
+
+### V1 HRV Distribution
+
+```{r}
+# Make a long format of variables for visualization
+df <- z_hrv1[c("ID", "BPM", "HF", "LF", "VLF", "TP", "LF_HF", "PNN50", "RMSSD", "SDNN")] %>% gather(variable, value, -ID)
+
+# Visualize each distribution pattern
+gDistributionHRV1 <-
+  ggplot(df, aes(x = value, fill = variable)) +
+  facet_wrap(~variable, ncol = 3, scales = "free") +
+  geom_histogram(aes(y = ..count.. / sum(..count..))) +
+  scale_y_continuous(labels = percent) +
+  scale_fill_viridis(option="cividis", discrete = TRUE) + 
+  labs(
+    title = "Distribution of untransformed HRV [V1]",
+    x = "Values",
+    y = "Frequency (percent)"
+  ) +
+  guides(fill = FALSE) +
+  theme_minimal()
+
+# Display
+gDistributionHRV1
+```
+
+### V1 HRV Distribution Normalized
+
+```{r}
+# Normalized long table
+df <- z_hrv1[c("ID", "BPM", "HF", "LF", "VLF", "TP", "LF_HF", "PNN50", "RMSSD", "SDNN")] %>% gather(variable, value, -ID)
+
+# Ridge plots after normalization
+gRidgesHRV1 <-
+  ggplot(df, aes(x = value, y = variable)) +
+  geom_density_ridges2(aes(fill = variable), colour = "white", scale = 1.3) +
+  scale_fill_viridis(option="cividis", discrete = TRUE) + 
+  xlim(-3, 3) +
+  labs(
+    title = "Distribution of HRV after normalization at V1",
+    x = "Values after cube root and z-normalization",
+    y = "HRV measures distribution"
+  ) +
+  guides(fill = FALSE) +
+  theme_minimal()
+
+# Display
+gRidgesHRV1
+```
+
+### V1 HRV Correlation Table
+
+```{r}
+# Correlation tests
+df <- z_hrv1[-1]
+correlation_plot_hrv_v1 <-
+  ggcorr(df, nbreaks = 10, palette = "BrBG", label = TRUE)
+
+# Display
+correlation_plot_hrv_v1
+```
+
+
+### Comparison of V1 HRV to V1 and V2 Demographics 
+
+The HRV data collected at V1 was compared to the demographic data determined at V1 and V2. HRV was broken into quantiles and these subgroups were compared as below.
+
+```{r}
+# Data
+df <-
+  gather(hrv1[c(1,23:31)], hrv, group, 2:10) %>%
+  inner_join(., gather(cs1[c(1,9:11)], comorbidity, status, 2:4)) %>%
+  na.omit()
+
+## VISIT 1
+
+# Data spread out, attempt to plot
+
+gDMxHRV_V1 <-
+  ggplot(na.omit(df[df$status == 1 & df$comorbidity == "DIABETES", ]), aes(x = status, fill = group)) +
+  facet_wrap(~hrv, scales = "fixed") +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -1, position = position_dodge(width = 1)) +
+  labs(
+    title = "V1 Diabetes prevalance by HRV quantiles",
+    y = "Number of patients"
+  ) +
+  ylim(0, 800) +
+  scale_fill_viridis(option = "cividis", discrete = TRUE) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank()
+  )
+
+gCHDxHRV_V1 <-
+  ggplot(na.omit(df[df$status == 1 & df$comorbidity == "CHD", ]), aes(x = status, fill = group)) +
+  facet_wrap(~hrv, scales = "fixed") +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -1, position = position_dodge(width = 1)) +
+  labs(
+    title = "V1 CHD prevalance by HRV quantiles",
+    y = "Number of patients"
+  ) +
+  ylim(0, 400) +
+  scale_fill_viridis(option = "cividis", discrete = TRUE) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank()
+  )
+
+gHTNxHRV_V1 <-
+  ggplot(na.omit(df[df$status == 1 & df$comorbidity == "HTN", ]), aes(x = status, fill = group)) +
+  facet_wrap(~hrv, scales = "fixed") +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -1, position = position_dodge(width = 1)) +
+  labs(
+    title = "V1 HTN prevalance by HRV quantiles",
+    y = "Number of patients"
+  ) +
+  ylim(0, 2000) +
+  scale_fill_viridis(option = "cividis", discrete = TRUE) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank()
+  )
+
+## VISIT 2
+# Attempt at large scale visualization through long data
+# Data
+df <-
+  gather(hrv1[c(1,23:31)], hrv, group, 2:10) %>%
+  inner_join(., gather(cs2[c(1,8:11)], comorbidity, status, 2:5)) %>%
+  na.omit()
+
+# Data spread out, attempt to plot
+
+gDMxHRV_V2 <-
+  ggplot(na.omit(df[df$status == 1 & df$comorbidity == "DIABETES", ]), aes(x = status, fill = group)) +
+  facet_wrap(~hrv, scales = "fixed") +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -1, position = position_dodge(width = 1)) +
+  labs(
+    title = "V2 Diabetes prevalance by HRV quantiles",
+    y = "Number of patients"
+  ) +
+  ylim(0, 800) +
+  scale_fill_viridis(option = "cividis", discrete = TRUE) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank()
+  )
+
+gCHDxHRV_V2 <-
+  ggplot(na.omit(df[df$status == 1 & df$comorbidity == "CHD", ]), aes(x = status, fill = group)) +
+  facet_wrap(~hrv, scales = "fixed") +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -1, position = position_dodge(width = 1)) +
+  labs(
+    title = "V2 CHD prevalance by HRV quantiles",
+    y = "Number of patients"
+  ) +
+  ylim(0, 400) +
+  scale_fill_viridis(option = "cividis", discrete = TRUE) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank()
+  )
+
+gHTNxHRV_V2 <-
+  ggplot(na.omit(df[df$status == 1 & df$comorbidity == "HTN", ]), aes(x = status, fill = group)) +
+  facet_wrap(~hrv, scales = "fixed") +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -1, position = position_dodge(width = 1)) +
+  labs(
+    title = "V2 HTN prevalance by HRV quantiles",
+    y = "Number of patients"
+  ) +
+  ylim(0, 2000) +
+  scale_fill_viridis(option = "cividis", discrete = TRUE) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank()
+  )
+
+gSTROKExHRV_V2 <-
+  ggplot(na.omit(df[df$status == 1 & df$comorbidity == "STROKE", ]), aes(x = status, fill = group)) +
+  facet_wrap(~hrv, scales = "fixed") +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -1, position = position_dodge(width = 1)) +
+  labs(
+    title = "V2 STROKE prevalance by HRV quantiles",
+    y = "Number of patients"
+  ) +
+  ylim(0, 100) +
+  scale_fill_viridis(option = "cividis", discrete = TRUE) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank()
+  )
+```
+
+### DM and HRV at V1
+```{r}
+gDMxHRV_V1
+```
+
+### CHD and HRV at V1
+```{r}
+gCHDxHRV_V1
+```
+
+### HTN and HRV at V1
+```{r}
+gHTNxHRV_V1
+```
+
+### DM and HRV at V2
+```{r}
+gDMxHRV_V2
+```
+
+### CHD and HRV at V2
+```{r}
+gCHDxHRV_V2
+```
+
+### HTN and HRV at V2
+```{r}
+gHTNxHRV_V2
+```
+
+### STROKE and HRV at V2
+```{r}
+gSTROKExHRV_V2
+```
+
+
+## HRV at V4 ====
+
+### V4 HRV Distribution
+
+```{r}
+# Make a long format of variables for visualization
+df <- z_hrv4[c("ID", "BPM", "HF", "LF", "VLF", "TP", "LF_HF", "PNN50", "RMSSD", "SDNN")] %>% gather(variable, value, -ID)
+
+# Visualize each distribution pattern
+gDistributionHRV4 <-
+  ggplot(df, aes(x = value, fill = variable)) +
+  facet_wrap(~variable, ncol = 3, scales = "free") +
+  geom_histogram(aes(y = ..count.. / sum(..count..))) +
+  scale_y_continuous(labels = percent) +
+  scale_fill_viridis(option = "cividis", discrete = TRUE) +
+  labs(
+    title = "Distribution of untransformed HRV [V4]",
+    x = "Values",
+    y = "Frequency (percent)"
+  ) +
+  guides(fill = FALSE) +
+  theme_minimal()
+
+# Dipslay
+gDistributionHRV4
+```
+
+### V4 HRV Distribution Normalized
+
+```{r}
+# Normalized long table
+df <- z_hrv4[c("ID", "BPM", "HF", "LF", "VLF", "TP", "LF_HF", "PNN50", "RMSSD", "SDNN")] %>% gather(variable, value, -ID)
+
+# Ridge plots after normalization
+gRidgesHRV4 <-
+  ggplot(df, aes(x = value, y = variable)) +
+  geom_density_ridges2(aes(fill = variable), colour = "white", scale = 1.3) +
+  scale_fill_viridis(option = "cividis", discrete = TRUE) +
+  xlim(-3, 3) +
+  labs(
+    title = "Distribution of HRV after normalization at V4",
+    x = "Values after cube root and z-normalization",
+    y = "HRV measures distribution"
+  ) +
+  guides(fill = FALSE) +
+  theme_minimal()
+
+# Display.
+gRidgesHRV4
+```
+
+### V4 HRV Correlation Table
+
+```{r}
+# Correlation tests
+df <- z_hrv4[-1]
+correlation_plot_hrv_v4 <-
+  ggcorr(df, nbreaks = 10, palette = "BrBG", label = TRUE)
+
+# Display
+correlation_plot_hrv_v4
+```
+
+### Comparison of V4 HRV to V1 and V4 Demographics
+
+HRV was collected at visit 4. This was then applied to the cross-sectional data from Visit 1 and from Visit 4.
+
+```{r}
+
+# Data frame using HRV collected at V4
+df <-
+  gather(hrv4[c(1,23:31)], hrv, group, 2:10) %>%
+  inner_join(., gather(cs1[c(1,9:11)], comorbidity, status, 2:4)) %>%
+  na.omit()
+
+# Data spread out, attempt to plot
+gDMxHRV_V1 <-
+  ggplot(na.omit(df[df$status == 1 & df$comorbidity == "DIABETES", ]), aes(x = status, fill = group)) +
+  facet_wrap(~hrv, scales = "fixed") +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -1, position = position_dodge(width = 1)) +
+  labs(
+    title = "V1 Diabetes prevalance by HRV quantiles",
+    y = "Number of patients"
+  ) +
+  ylim(0, 600) +
+  scale_fill_viridis(option = "cividis", discrete = TRUE) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank()
+  )
+
+gCHDxHRV_V1 <-
+  ggplot(na.omit(df[df$status == 1 & df$comorbidity == "CHD", ]), aes(x = status, fill = group)) +
+  facet_wrap(~hrv, scales = "fixed") +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -1, position = position_dodge(width = 1)) +
+  labs(
+    title = "V1 CHD prevalance by HRV quantiles",
+    y = "Number of patients"
+  ) +
+  ylim(0, 200) +
+  scale_fill_viridis(option = "cividis", discrete = TRUE) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank()
+  )
+
+gHTNxHRV_V1 <-
+  ggplot(na.omit(df[df$status == 1 & df$comorbidity == "HTN", ]), aes(x = status, fill = group)) +
+  facet_wrap(~hrv, scales = "fixed") +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -1, position = position_dodge(width = 1)) +
+  labs(
+    title = "V1 HTN prevalance by HRV quantiles",
+    y = "Number of patients"
+  ) +
+  ylim(0, 1600) +
+  scale_fill_viridis(option = "cividis", discrete = TRUE) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank()
+  )
+
+## Comparison at Visit 4
+df <-
+  gather(hrv4[c(1,23:31)], hrv, group, 2:10) %>%
+  inner_join(., gather(cs4[c(1,6:7,10:11)], comorbidity, status, 2:5), by = "ID") %>%
+  na.omit()
+
+# Data spread out, attempt to plot
+gDMxHRV_V4 <-
+  ggplot(na.omit(df[df$status == 1 & df$comorbidity == "DIABETES", ]), aes(x = status, fill = group)) +
+  facet_wrap(~hrv, scales = "fixed") +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -1, position = position_dodge(width = 1)) +
+  labs(
+    title = "V4 Diabetes prevalance by HRV quantiles",
+    y = "Number of patients"
+  ) +
+  ylim(0, 800) +
+  scale_fill_viridis(option = "cividis", discrete = TRUE) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank()
+  )
+
+gCHDxHRV_V4 <-
+  ggplot(na.omit(df[df$status == 1 & df$comorbidity == "CHD", ]), aes(x = status, fill = group)) +
+  facet_wrap(~hrv, scales = "fixed") +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -1, position = position_dodge(width = 1)) +
+  labs(
+    title = "V4 CHD prevalance by HRV quantiles",
+    y = "Number of patients"
+  ) +
+  ylim(0, 400) +
+  scale_fill_viridis(option = "cividis", discrete = TRUE) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank()
+  )
+
+gHTNxHRV_V4 <-
+  ggplot(na.omit(df[df$status == 1 & df$comorbidity == "HTN", ]), aes(x = status, fill = group)) +
+  facet_wrap(~hrv, scales = "fixed") +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -1, position = position_dodge(width = 1)) +
+  labs(
+    title = "V4 HTN prevalance by HRV quantiles",
+    y = "Number of patients"
+  ) +
+  ylim(0, 1600) +
+  scale_fill_viridis(option = "cividis", discrete = TRUE) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank()
+  )
+
+gSTROKExHRV_V4 <-
+  ggplot(na.omit(df[df$status == 1 & df$comorbidity == "STROKE", ]), aes(x = status, fill = group)) +
+  facet_wrap(~hrv, scales = "fixed") +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -1, position = position_dodge(width = 1)) +
+  labs(
+    title = "V4 Stroke prevalance by HRV quantiles",
+    y = "Number of patients"
+  ) +
+  ylim(0, 100) +
+  scale_fill_viridis(option = "cividis", discrete = TRUE) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank()
+  )
+```
+
+### HTN and HRV at V1
+```{r}
+gHTNxHRV_V1
+```
+
+### DM and HRV at V1
+```{r}
+gDMxHRV_V1
+```
+
+### CHD and HRV at V1
+```{r}
+gCHDxHRV_V1
+```
+
+### HTN and HRV at V4
+```{r}
+gHTNxHRV_V4
+```
+
+### DM and HRV at V4
+```{r}
+gDMxHRV_V4
+```
+
+### CHD at HRV at V4
+```{r}
+gCHDxHRV_V4
+```
+
+### STROKE and HRV at V4
+```{r}
+gSTROKExHRV_V4
+```
+
+
+## CROSS-SECTIONAL RELATIONSHIP OF HRV AND STRESS ====
+
+### V1 and V4 HRV Measures
+
+```{r}
+# Correlation over time
+inner_join(z_hrv1, z_hrv4, by = "ID") %>%
+  ggcorr(., nbreaks = 10, palette = "BrBG", label = TRUE)
+```
+
+### V2 and V4 Anger Measures
+
+```{r}
+inner_join(score_hpc2, score_hpc4, by = "ID")  %>%
+  ggcorr(., nbreaks = 10, palette = "BrBG", label = TRUE)
+```
+
+
+### V2 Correlation of Stress
+
+```{r}
+ggcorr(scores, nbreaks = 10, palette = "BrBG", label = TRUE)
+```
+
+### V2 Correlation of Stress and HRV
+
+```{r}
+# Data frame
+df <- inner_join(z_hrv1, scores, by = "ID") %>% na.omit()
+
+ggcorr(df[-1], label = TRUE, label_alpha = TRUE, palette = "BrBG", nbreaks = 10, geom = "tile", label_size = 3)
+```
+
+### V2 HRV Distribution by Psychosocial Quartile {.allowframebreaks}
+
+```{r, results='asis'}
+# Data from V1 is carried forward impromptu.
+# HRV = z_hrv1
+# Stress will be from visit 2 = scores
+df <- inner_join(z_hrv1, scores, by = "ID") %>% na.omit()
+
+# Each psychosocial measure and its effect on different HRV measures
+
+# ISEL
+ISEL_hrv <-
+  tabular(Format(digits = 2) * (BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN) * (mean) ~ ISELg, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 ISEL x HRV Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
+
+# AP
+ap_hrv <-
+  tabular(Format(digits = 2) * (BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN) * (mean) ~ APg, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 ISEL-AP x HRV Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
+
+# TA
+ta_hrv <-
+  tabular(Format(digits = 2) * (BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN) * (mean) ~ TAg, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 ISEL-TA x HRV Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
+
+# BE
+be_hrv <-
+  tabular(Format(digits = 2) * (BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN) * (mean) ~ BEg, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 ISEL-BE x HRV Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
+
+# ISEL-SE
+se_hrv <-
+  tabular(Format(digits = 2) * (BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN) * (mean) ~ SEg, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 ISEL-SE x HRV Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
+
+# LSNS
+LSNS_hrv <-
+  tabular(Format(digits = 2) * (BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN) * (mean) ~ LSNSg, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 LSNS x HRV Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
+
+# MAASTRICHT
+vital_hrv <-
+  tabular(Format(digits = 2) * (BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN) * (mean) ~ MAASTRICHTg, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 MAASTRICHT x HRV Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
+
+# SPIELBERGER
+anger_hrv <-
+  tabular(Format(digits = 2) * (BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN) * (mean) ~ SPIELBERGERg, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V2 SPIELBERGER x HRV Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
+```
+
+Each measure of psychosocial stress was divided into four quartiles. These were all compared by HRV measure to examine the relationship. Of note, the ISEL subscales and the Maastricht questionnaire were of significance trends.
+
+### V2 Significant Relationships by Linear Regression
+
+```{r, results='asis'}
+# Data frame for V2
+df <-
+  merge(score_hpa2, score_hpb2, by = "ID") %>%
+  merge(., score_hpc2, by = "ID") %>%
+  gather(psych_variable, psych_value, -ID) %>%
+  merge(., gather(z_hrv1, hrv_variable, hrv_value, -ID), by = "ID") %>%
+  as_tibble()
+
+# Create selection variables
+df$psych_variable <- factor(df$psych_variable)
+df$hrv_variable <- factor(df$hrv_variable)
+
+# Create combination column as an identifier
+df$combination <- paste(df$psych_variable, df$hrv_variable)
+
+# Create combinatorial model
+lm_v2 <-
+  df %>%
+  group_by(psych_variable, hrv_variable) %>%
+  do(
+    model =
+      lm(.$psych_value ~ .$hrv_value, data = .)
+  )
+
+# Summarize the model and extract ocefficients
+lm_v2$model_sum <- map(lm_v2$model, summary)
+lm_v2$pvalue <-
+  as.numeric(map(lm_v2$model_sum, function(x) {
+    x$coefficients[2, 4]
+  }))
+lm_v2$rsquare <-
+  as.numeric(map(lm_v2$model_sum, function(x) {
+    x$r.squared
+  }))
+
+# Select only the significant models
+lm_sig <- lm_v2[lm_v2$pvalue < .05, ]
+lm_sig$combination <- paste(lm_sig$psych_variable, lm_sig$hrv_variable)
+
+# Visualize regressions
+gRegressionsV1 <-
+  ggplot(df[df$combination %in% lm_sig$combination, ], aes(x = hrv_value, y = psych_value, colour = psych_variable)) +
+  facet_wrap(~hrv_variable, scales = "free", ncol = 3) +
+  geom_smooth(method = "lm", se = TRUE) +
+  xlim(-3, 3) +
+  labs(
+    title = "Linear regressions of Psych ~ HRV at Visit 2",
+    x = "Normalized HRV",
+    y = "Normalized Psych Scores [SEM]",
+    colour = "Psychosocial Measures",
+    caption = "Significant correlations of HRV with psychosocial measures is visualized above."
+  ) +
+  scale_colour_ptol() +
+  theme_minimal()
+
+# Regression table
+lm_sig[lm_sig$pvalue < .05 & lm_sig$hrv_variable != "BPM", c("psych_variable", "hrv_variable", "pvalue", "rsquare")] %>%
+  xtable(., caption = "Significant relationships at V2") %>%
+  print(., caption.placement = "top", size = "\\small")
+```
+
+
+### V4 Correlation Table
+
+```{r}
+# Data frame
+df <- inner_join(hrv4[1:10], score_hpc4, by = "ID") %>% na.omit()
+
+ggcorr(df[-1], label = TRUE, label_alpha = TRUE, palette = "BrBG", nbreaks = 10, geom = "tile", label_size = 3)
+```
+
+### V4 HRV Distribution Psychosocial Quartiles {.allowframebreaks}
+
+```{r, results='asis'}
+# Scores and DF for analysis
+df <-
+  within(score_hpc4, {
+    angerg <- ntile(SPIELBERGER, 4) %>% factor()
+  }) %>%
+  inner_join(hrv4, .)
+
+# SPIELBERGER
+anger_hrv <-
+  tabular(Format(digits = 2) * (BPM + HF + LF + VLF + TP + PNN50 + RMSSD + SDNN) * (mean) ~ angerg, data = na.omit(df)) %>%
+  as.matrix() %>%
+  xtable(., caption = "V4 SPIELBERGER x HRV Description") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
+```
+
+### V4 Significant Relationships by Linear Regression
+
+```{r, results='asis'}
+# Data from visit 4
+df <-
+  score_hpc4 %>%
+  gather(psych_variable, psych_value, -ID) %>%
+  merge(., gather(z_hrv4[1:10], hrv_variable, hrv_value, -ID)) %>%
+  as_tibble()
+
+# Create identifying variables
+df$psych_variable <- factor(df$psych_variable)
+df$hrv_variable <- factor(df$hrv_variable)
+df$combination <- paste(df$psych_variable, df$hrv_variable)
+
+# Create combinatorial model
+lm_v4 <-
+  df %>%
+  group_by(psych_variable, hrv_variable) %>%
+  do(
+    model =
+      lm(.$psych_value ~ .$hrv_value, data = .)
+  )
+
+# Summarize the model and extract ocefficients
+lm_v4$model_sum <- map(lm_v4$model, summary)
+lm_v4$pvalue <-
+  as.numeric(map(lm_v4$model_sum, function(x) {
+    x$coefficients[2, 4]
+  }))
+lm_v4$rsquare <-
+  as.numeric(map(lm_v4$model_sum, function(x) {
+    x$r.squared
+  }))
+
+# Select only the significant models
+lm_sig <- lm_v4[lm_v4$pvalue < .05, ]
+lm_sig$combination <- paste(lm_sig$psych_variable, lm_sig$hrv_variable)
+
+# Visualize regressions
+gRegressionsV4 <-
+  ggplot(df[df$combination %in% lm_sig$combination, ], aes(x = hrv_value, y = psych_value, colour = psych_variable)) +
+  facet_wrap(~hrv_variable, scales = "free", ncol = 2) +
+  geom_smooth(method = "lm", se = TRUE) +
+  xlim(-3, 3) +
+  labs(
+    title = "Linear regressions of Psych ~ HRV at Visit 4",
+    x = "Normalized HRV",
+    y = "Normalized Psych Scores [SEM",
+    colour = "Psychosocial Measures"
+  ) +
+  scale_colour_ptol() +
+  theme_minimal()
+
+# Table of significance
+lm_sig[lm_sig$pvalue < .05 & lm_sig$hrv_variable != "BPM", c("psych_variable", "hrv_variable", "pvalue", "rsquare")] %>%
+  xtable(., caption = "Significant relationships at V4") %>%
+  print(., caption.placement = "top", size = "\\small")
+```
+
+## DESCRIPTION OF OUTCOMES ====
+
+### Overview of outcomes {.allowframebreaks}
+
+The overall number of deaths recorded are `r sum(outcomes$DEAD)` out of an initial population of `r length(outcomes$ID)`. Of those deaths, `r sum(na.omit(outcomes$DEAD[outcomes$chapter == "diseases of the circulatory system"]))` were from a disease of the circulatory system, defined by ICD.
+
+```{r, results='asis'}
+# Combination of outcomes and initial data
+df <- inner_join(cs1, outcomes[-2], by = "ID")
+
+# Types of cardiovascular death
+tmp <- df[df$chapter == "disease of the circulatory system",]
+tmp$subchapter %<>% factor
+tabular(subchapter ~ DEAD, data = tmp) %>%
+  as.matrix %>%
+  xtable(., caption = "Patient deaths by diagnosis chapters") %>%
+  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\small")
+```
+
+### Overall survival curves
+
+```{r}
+# Overal data set
+df <- inner_join(cs1, outcomes[-2], by = "ID")
+
+# Modify to show cardiovascular deaths versus other deaths
+tmp <- df
+tmp$death_type <- NA
+tmp$death_type[tmp$chapter == "disease of the circulatory system"] <- "cv"
+tmp$death_type[tmp$chapter != "disease of the circulatory system"] <- "other"
+tmp$death_type %<>% factor()
+
+# Cardiovascular mortality curve
+gKaplanOverall <-
+  survfit(Surv(AGE_DEATH, DEAD, type = c("right")) ~ death_type, data = tmp) %>%
+  ggsurvplot(.,
+             data = tmp,
+             risk.table = TRUE,
+             xlim = c(50,90),
+             palette = ptol_pal()(2))
+
+# Plot overall
+gKaplanOverall
+```
+
+### Cardiovascular survival curve
+```{r}
+# Cardiovascular death break down
+cv <- 
+  outcomes[outcomes$chapter == "disease of the circulatory system", -2] %>%
+  inner_join(cs1, ., by = "ID")
+cv$chapter %<>% factor
+cv$subchapter %<>% factor
+levels(cv$subchapter) <- c("CVA", "RHD", "PVD", "PULM", "VEINS", "LYMPH", "HTN", "IHD", "OTHER_CIRC", "OTHER_HEART", "PULM")
+
+# Cardiovascular break down curve
+gKaplanCV <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ subchapter, data = cv) %>%
+  ggsurvplot(., 
+             data = cv,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = "Spectral")
+
+# Plot
+gKaplanCV
+```
+
+### Survival by V1 HRV Measure
+
+HRV was taken at visit 2 and then broken into quintiles. These were compared over time to look for mortality outcomes by each HRV measure.
+
+```{r}
+# Data to be used going forward
+df <- inner_join(outcomes, hrv1[c(1,23:31)], by = "ID")
+```
+
+
+### BPM survival
+
+```{r}
+# Visualization
+gKaplanRR <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ RRg, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = viridis(5)
+  )
+
+# Plot
+gKaplanRR
+```
+
+### HF survival
+
+```{r}
+# Visualization
+gKaplanHF <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ HFg, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = viridis(5)
+  )
+
+# Plot
+gKaplanHF
+```
+
+### LF survival
+
+```{r}
+# Visualization
+gKaplanLF <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ LFg, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = viridis(5)
+  )
+
+# Plot
+gKaplanLF
+```
+
+### VLF survival
+
+```{r}
+# Visualization
+gKaplanVLF <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ VLFg, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = viridis(5)
+  )
+
+# Plot
+gKaplanVLF
+```
+
+### TP survival
+
+```{r}
+# Visualization
+gKaplanTP <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ TPg, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = viridis(5)
+  )
+
+# Plot
+gKaplanTP
+```
+
+### PNN50 survival
+
+```{r}
+# Visualization
+gKaplanPNN50 <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ PNN50g, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = viridis(5)
+  )
+
+# Plot
+gKaplanPNN50
+```
+
+### RMSSD survival
+
+```{r}
+# Visualization
+gKaplanRMSSD <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ RMSSDg, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = viridis(5)
+  )
+
+# Plot
+gKaplanRMSSD
+```
+
+### SDNN survival
+
+```{r}
+# Visualization
+gKaplanSDNN <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ SDNNg, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = viridis(5)
+  )
+
+# Plot
+gKaplanSDNN
+```
+
+### Survival by V4 HRV Measure
+
+HRV was taken at visit 2 and then broken into quintiles. These were compared over time to look for mortality outcomes by each HRV measure.
+
+### BPM survival
+
+```{r}
+# Visualization
+gKaplanRR <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ RRg, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = viridis(5)
+  )
+
+# Plot
+gKaplanRR
+```
+
+### HF survival
+
+```{r}
+# Visualization
+gKaplanHF <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ HFg, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = viridis(5)
+  )
+
+# Plot
+gKaplanHF
+```
+
+### LF survival
+
+```{r}
+# Visualization
+gKaplanLF <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ LFg, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = viridis(5)
+  )
+
+# Plot
+gKaplanLF
+```
+
+### VLF survival
+
+```{r}
+# Visualization
+gKaplanVLF <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ VLFg, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = viridis(5)
+  )
+
+# Plot
+gKaplanVLF
+```
+
+### TP survival
+
+```{r}
+# Visualization
+gKaplanTP <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ TPg, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = viridis(5)
+  )
+
+# Plot
+gKaplanTP
+```
+
+### PNN50 survival
+
+```{r}
+# Visualization
+gKaplanPNN50 <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ PNN50g, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = viridis(5)
+  )
+
+# Plot
+gKaplanPNN50
+```
+
+### RMSSD survival
+
+```{r}
+# Visualization
+gKaplanRMSSD <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ RMSSDg, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = viridis(5)
+  )
+
+# Plot
+gKaplanRMSSD
+```
+
+### SDNN survival
+
+```{r}
+# Visualization
+gKaplanSDNN <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ SDNNg, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = viridis(5)
+  )
+
+# Plot
+gKaplanSDNN
+```
+
+### Survival by stress measure
+
+Psychosocial scores taken from V2 were broken into quartiles. These were compared over time to look for mortality outcome patterns.
+
+```{r}
+# Data
+df <- inner_join(outcomes, scores, by = "ID")
+```
+
+
+### ISEL survival
+
+```{r}
+# Visualization
+gKaplanISEL <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ ISELg, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = viridis(4)
+  )
+
+# Plot
+gKaplanISEL
+```
+
+### AP survival
+
+```{r}
+# Visualization
+gKaplanAP <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ APg, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = viridis(4)
+  )
+
+# Plot
+gKaplanAP
+
+```
+
+### TA survival
+
+```{r}
+# Visualization
+gKaplanTA <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ TAg, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = viridis(4)
+  )
+
+# Plot
+gKaplanTA
+
+```
+
+### BE survival
+
+```{r}
+# Visualization
+gKaplanBE <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ BEg, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = viridis(4)
+  )
+
+# Plot
+gKaplanBE
+```
+
+### SE survival
+
+```{r}
+# Visualization
+gKaplanSE <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ SEg, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = viridis(4)
+  )
+
+# Plot
+gKaplanSE
+```
+
+### MAASTRICHT survival
+
+```{r}
+# Visualization
+gKaplanMAASTRICHT <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ MAASTRICHTg, data = df[df$chapter == "disease of the circulatory system",]) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = viridis(4)
+  )
+
+# Plot
+gKaplanMAASTRICHT
+```
+
+### V2 ANGER survival
+
+```{r}
+# Data
+df <- inner_join(outcomes, scores, by = "ID")
+
+# Visualization
+gKaplanSPIELBERGER_v2 <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ SPIELBERGERg, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = viridis(4)
+  )
+
+# Plot
+gKaplanSPIELBERGER_v2
+```
+
+### V4 ANGER survival
+
+```{r}
+# combine anger at V4 and outcomes
+df <-
+  within(score_hpc4, {
+    SPIELBERGERg <- ntile(SPIELBERGER, 4) %>% factor()
+  }) %>%
+  inner_join(outcomes, ., by = "ID")
+
+# Visualization
+gKaplanSPIELBERGER_v4 <-
+  survfit(Surv(AGE_DEATH, DEAD) ~ SPIELBERGERg, data = df) %>%
+  ggsurvplot(., 
+             data = df,
+             risk.table = TRUE,
+             xlim = c(50, 90),
+             palette = viridis(4)
+  )
+
+# Plot
+gKaplanSPIELBERGER_v4
+```
+ 
+# OUTCOMES ====
+
+## Interpersonal Support Evaluation List (ISEL)
+
+### Kaplan Meier curve by ISEL groups for overall survival
+
+```{r}
+# Data
+df <- inner_join(outcomes, cs1, by = "ID") %>%
+  inner_join(., scores, by = "ID")
+
+# ISEL scores are the focus here
+# The higher the group, the more support available
+# Survival object
+fit <- survfit(Surv(AGE_DEATH, DEAD) ~ ISELg + GENDER, data = df)
+ggsurvplot(fit,
+           xlim = c(50,90),
+           risk.table = TRUE, 
+           surv.median.line = "hv",
+           pval = TRUE,
+           conf.int = TRUE,
+           xlab = "Time in years before event",
+           ylab = "Survival probability",
+           title = "KM = ISEL quartile x Gender",
+           ggtheme = theme_minimal(),
+           palette = viridis(8, alpha = .50)
+           )
+```
+
+## Lubben Social Network Support (LSNS)
+
+### Kaplan Meier curve by Lubben Social Support Network for overall survival
+
+```{r}
+# Data
+df <- inner_join(outcomes, cs1, by = "ID") %>%
+  inner_join(., scores, by = "ID")
+
+# ISEL scores are the focus here
+# The higher the group, the more support available
+# Survival object
+fit <- survfit(Surv(AGE_DEATH, DEAD) ~ LSNSg + GENDER, data = df)
+ggsurvplot(fit,
+           xlim = c(50,90),
+           risk.table = TRUE, 
+           surv.median.line = "hv",
+           pval = TRUE,
+           conf.int = TRUE,
+           xlab = "Time in years before event",
+           ylab = "Survival probability",
+           title = "KM = Lubben support quartile x Gender",
+           ggtheme = theme_minimal(),
+           palette = viridis(8, alpha = .50)
+           )
+```
+
+## Maastricht Vital Exhaustion Questionnaire
+
+### Kaplan Meier curve by Maastricht groups for overall survival
+
+```{r}
+# Data
+df <- inner_join(outcomes, cs1, by = "ID") %>%
+  inner_join(., scores, by = "ID")
+
+# ISEL scores are the focus here
+# The higher the group, the more support available
+# Survival object
+fit <- survfit(Surv(AGE_DEATH, DEAD) ~ MAASTRICHTg + GENDER, data = df)
+ggsurvplot(fit,
+           xlim = c(50,90),
+           risk.table = TRUE, 
+           surv.median.line = "hv",
+           pval = TRUE,
+           conf.int = TRUE,
+           xlab = "Time in years before event",
+           ylab = "Survival probability",
+           title = "KM = Maastricht quartile x Gender",
+           ggtheme = theme_minimal(),
+           palette = viridis(8, alpha = .50)
+           )
+```
+
+## Spielberger Anger Trait
+
+### Kaplan Meier curve by Spielberger groups for overall survival
+
+```{r}
+# Data
+df <- inner_join(outcomes, cs1, by = "ID") %>%
+  inner_join(., scores, by = "ID")
+
+# Survival object
+fit <- survfit(Surv(AGE_DEATH, DEAD) ~ anger_level + GENDER, data = df)
+ggsurvplot(fit,
+           xlim = c(50,90),
+           risk.table = TRUE, 
+           surv.median.line = "hv",
+           pval = TRUE,
+           conf.int = TRUE,
+           xlab = "Time in years before event",
+           ylab = "Survival probability",
+           title = "KM = Spielberger anger level x Gender",
+           ggtheme = theme_minimal(),
+           palette = viridis(8, alpha = .50)
+           )
+```
+
+# HRV AND OUTCOMES ====
+
+## Power spectral analysis
+
+### High frequency Kaplan Meier curve for overall survival
+
+```{r}
+# Data
+df <- inner_join(outcomes, cs1, by = "ID") %>%
+  inner_join(., hrv1, by = "ID")
+
+# Kaplan Meier curve
+fit <- survfit(Surv(AGE_DEATH, DEAD) ~ HFg + GENDER, data = df)
+ggsurvplot(fit,
+           xlim = c(50,90),
+           risk.table = TRUE, 
+           surv.median.line = "hv",
+           pval = TRUE,
+           conf.int = TRUE,
+           xlab = "Time in years before event",
+           ylab = "Survival probability",
+           title = "KM = HF quartile x Gender",
+           ggtheme = theme_minimal(),
+           palette = viridis(10, alpha = .50)
+)
+```
+
+### High frequency (corrected) KM for overall survival
+
+```{r}
+# Data
+df <- inner_join(outcomes, cs1, by = "ID") %>%
+  inner_join(., hrv1, by = "ID")
+
+# Kaplan Meier curve
+fit <- survfit(Surv(AGE_DEATH, DEAD) ~ LF_HFg + GENDER, data = df)
+ggsurvplot(fit,
+           xlim = c(50,90),
+           risk.table = TRUE, 
+           surv.median.line = "hv",
+           pval = TRUE,
+           conf.int = TRUE,
+           xlab = "Time in years before event",
+           ylab = "Survival probability",
+           title = "KM = HF quartile x Gender",
+           ggtheme = theme_minimal(),
+           palette = viridis(10, alpha = .50)
+)
+```
+
+# CONCLUSION ====
+
+### References {.allowframebreaks}
+

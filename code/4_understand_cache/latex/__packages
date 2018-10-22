@@ -4,12 +4,15 @@ knitr
 tinytex
 kableExtra
 citr
+tufte
 scales
 ggthemes
 reshape2
 gridExtra
 ggridges
 RColorBrewer
+viridisLite
+viridis
 ggplot2
 GGally
 lattice
@@ -39,6 +42,8 @@ SNPassoc
 compareGroups
 Epi
 rcompanion
+MASS
+stargazer
 tidyverse
 tibble
 tidyr
