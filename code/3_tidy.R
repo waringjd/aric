@@ -417,47 +417,72 @@ df$TPc <- df$TP/(df$RR)^2
 df$SDNNc <- df$SDNN/df$RR
 df$RMSSDc <- df$RMSSD/df$RR
 
-# Quintile based groups
-df <-
-  within(df, {
-    HFg <- cut2(HF, g = 5)
-    levels(HFg) <- 1:5
-    LFg <- cut2(HF, g = 5)
-    levels(LFg) <- 1:5
-    VLFg <- cut2(VLF, g = 5)
-    levels(VLFg) <- 1:5
-    TPg <- cut2(TP, g = 5)
-    levels(TPg) <- 1:5
-    PNN50g <- cut2(PNN50, g = 5)
-    levels(PNN50g) <- 1:5
-    RMSSDg <- cut2(RMSSD, g = 5)
-    levels(RMSSDg) <- 1:5
-    SDNNg <- cut2(SDNN, g = 5)
-    levels(SDNNg) <- 1:5
-    LF_HFg <- cut2(LF_HF, g = 5)
-    levels(LF_HFg) <- 1:5
-    RRg <- cut2(RR, g = 5)
-    levels(RRg) <- 1:5
-    HFcg <- cut2(HFc, g = 5)
-    levels(HFcg) <- 1:5
-    LFcg <- cut2(LFc, g = 5)
-    levels(LFcg) <- 1:5
-    VLFg <- cut2(VLF, g = 5)
-    levels(VLFg) <- 1:5
-    TPcg <- cut2(TPc, g = 5)
-    levels(TPcg) <- 1:5
-    SDNNcg <- cut2(SDNNc, g = 5)
-    levels(SDNNcg) <- 1:5
-    RMSSDcg <- cut2(RMSSDc, g = 5)
-    levels(RMSSDcg) <- 1:5
-  })
-
 # Only quality HRV data
 hrv1 <- df
 
 # Will need to transform the data prior to utilization
 z_hrv1 <- hrv1[1:17]
 z_hrv1[-1] %<>%
+  scale(., center = TRUE, scale = TRUE)
+
+# Quintile based groups by gender
+df <- inner_join(hrv1, cs1[c("ID", "GENDER")], by = "ID")
+hrv1_female <-
+  within(df[df$GENDER == "Female", c("ID", "LF_HF", "RR", "HFc", "LFc", "VLFc", "TPc", "SDNNc", "RMSSDc", "PNN50")], {
+    LF_HFg <- cut2(LF_HF, g = 5)
+    levels(LF_HFg) <- 1:5
+    RRg <- cut2(RR, g = 5)
+    levels(RRg) <- 1:5
+    HFg <- cut2(HFc, g = 5)
+    levels(HFg) <- 1:5
+    LFg <- cut2(LFc, g = 5)
+    levels(LFg) <- 1:5
+    VLFg <- cut2(VLFc, g = 5)
+    levels(VLFg) <- 1:5
+    TPg <- cut2(TPc, g = 5)
+    levels(TPg) <- 1:5
+    SDNNg <- cut2(SDNNc, g = 5)
+    levels(SDNNg) <- 1:5
+    RMSSDg <- cut2(RMSSDc, g = 5)
+    levels(RMSSDg) <- 1:5
+    PNN50g <- cut2(PNN50, g = 5)
+    levels(PNN50g) <- 1:5
+  })
+
+# Z-score for women
+z_hrv1_female <- 
+	hrv1_female[c("ID", "LF_HF", "RR", "HFc", "LFc", "VLFc", "TPc", "SDNNc", "RMSSDc", "PNN50")]
+
+z_hrv1_female[-1] %<>%
+  scale(., center = TRUE, scale = TRUE)
+
+hrv1_male <-
+  within(df[df$GENDER == "Male", c("ID", "LF_HF", "RR", "HFc", "LFc", "VLFc", "TPc", "SDNNc", "RMSSDc", "PNN50")], {
+    LF_HFg <- cut2(LF_HF, g = 5)
+    levels(LF_HFg) <- 1:5
+    RRg <- cut2(RR, g = 5)
+    levels(RRg) <- 1:5
+    HFg <- cut2(HFc, g = 5)
+    levels(HFg) <- 1:5
+    LFg <- cut2(LFc, g = 5)
+    levels(LFg) <- 1:5
+    VLFg <- cut2(VLFc, g = 5)
+    levels(VLFg) <- 1:5
+    TPg <- cut2(TPc, g = 5)
+    levels(TPg) <- 1:5
+    SDNNg <- cut2(SDNNc, g = 5)
+    levels(SDNNg) <- 1:5
+    RMSSDg <- cut2(RMSSDc, g = 5)
+    levels(RMSSDg) <- 1:5
+    PNN50g <- cut2(PNN50, g = 5)
+    levels(PNN50g) <- 1:5
+  })
+
+# Z-score for men
+z_hrv1_male <- 
+	hrv1_male[c("ID", "LF_HF", "RR", "HFc", "LFc", "VLFc", "TPc", "SDNNc", "RMSSDc", "PNN50")]
+
+z_hrv1_male[-1] %<>%
   scale(., center = TRUE, scale = TRUE)
 
 # }}}
@@ -499,48 +524,74 @@ df$TPc <- df$TP/(df$RR)^2
 df$SDNNc <- df$SDNN/df$RR
 df$RMSSDc <- df$RMSSD/df$RR
 
-# Quintile based groups
-df <-
-  within(df, {
-    HFg <- cut2(HF, g = 5)
-    levels(HFg) <- 1:5
-    LFg <- cut2(HF, g = 5)
-    levels(LFg) <- 1:5
-    VLFg <- cut2(VLF, g = 5)
-    levels(VLFg) <- 1:5
-    TPg <- cut2(TP, g = 5)
-    levels(TPg) <- 1:5
-    PNN50g <- cut2(PNN50, g = 5)
-    levels(PNN50g) <- 1:5
-    RMSSDg <- cut2(RMSSD, g = 5)
-    levels(RMSSDg) <- 1:5
-    SDNNg <- cut2(SDNN, g = 5)
-    levels(SDNNg) <- 1:5
-    LF_HFg <- cut2(LF_HF, g = 5)
-    levels(LF_HFg) <- 1:5
-    RRg <- cut2(RR, g = 5)
-    levels(RRg) <- 1:5
-    HFcg <- cut2(HFc, g = 5)
-    levels(HFcg) <- 1:5
-    LFcg <- cut2(LFc, g = 5)
-    levels(LFcg) <- 1:5
-    VLFg <- cut2(VLF, g = 5)
-    levels(VLFg) <- 1:5
-    TPcg <- cut2(TPc, g = 5)
-    levels(TPcg) <- 1:5
-    SDNNcg <- cut2(SDNNc, g = 5)
-    levels(SDNNcg) <- 1:5
-    RMSSDcg <- cut2(RMSSDc, g = 5)
-    levels(RMSSDcg) <- 1:5
-  })
-
 # Final data frame
-hrv4 <- df
+hrv4 <- df %>% na.omit()
 
 # Will need to transform the data prior to utilization
 z_hrv4 <- hrv4[1:17]
 z_hrv4[-1] %<>%
   scale(., center = TRUE, scale = TRUE)
+
+# Gender based quintiles
+df <- inner_join(hrv4, cs1[c("ID", "GENDER")], by = "ID")
+hrv4_female <-
+  within(df[df$GENDER == "Female", c("ID", "LF_HF", "RR", "HFc", "LFc", "VLFc", "TPc", "SDNNc", "RMSSDc", "PNN50")], {
+    LF_HFg <- cut2(LF_HF, g = 5)
+    levels(LF_HFg) <- 1:5
+    RRg <- cut2(RR, g = 5)
+    levels(RRg) <- 1:5
+    HFg <- cut2(HFc, g = 5)
+    levels(HFg) <- 1:5
+    LFg <- cut2(LFc, g = 5)
+    levels(LFg) <- 1:5
+    VLFg <- cut2(VLFc, g = 5)
+    levels(VLFg) <- 1:5
+    TPg <- cut2(TPc, g = 5)
+    levels(TPg) <- 1:5
+    SDNNg <- cut2(SDNNc, g = 5)
+    levels(SDNNg) <- 1:5
+    RMSSDg <- cut2(RMSSDc, g = 5)
+    levels(RMSSDg) <- 1:5
+    PNN50g <- cut2(PNN50, g = 5)
+    levels(PNN50g) <- 1:5
+  })
+
+hrv4_male <-
+  within(df[df$GENDER == "Male", c("ID", "LF_HF", "RR", "HFc", "LFc", "VLFc", "TPc", "SDNNc", "RMSSDc", "PNN50")], {
+    LF_HFg <- cut2(LF_HF, g = 5)
+    levels(LF_HFg) <- 1:5
+    RRg <- cut2(RR, g = 5)
+    levels(RRg) <- 1:5
+    HFg <- cut2(HFc, g = 5)
+    levels(HFg) <- 1:5
+    LFg <- cut2(LFc, g = 5)
+    levels(LFg) <- 1:5
+    VLFg <- cut2(VLFc, g = 5)
+    levels(VLFg) <- 1:5
+    TPg <- cut2(TPc, g = 5)
+    levels(TPg) <- 1:5
+    SDNNg <- cut2(SDNNc, g = 5)
+    levels(SDNNg) <- 1:5
+    RMSSDg <- cut2(RMSSDc, g = 5)
+    levels(RMSSDg) <- 1:5
+    PNN50g <- cut2(PNN50, g = 5)
+    levels(PNN50g) <- 1:5
+  })
+
+# Z-score for women
+z_hrv4_female <- 
+	hrv4_female[c("ID", "LF_HF", "RR", "HFc", "LFc", "VLFc", "TPc", "SDNNc", "RMSSDc", "PNN50")]
+
+z_hrv4_female[-1] %<>%
+  scale(., center = TRUE, scale = TRUE)
+
+# Z-score for men
+z_hrv4_male <- 
+	hrv4_male[c("ID", "LF_HF", "RR", "HFc", "LFc", "VLFc", "TPc", "SDNNc", "RMSSDc", "PNN50")]
+
+z_hrv4_male[-1] %<>%
+  scale(., center = TRUE, scale = TRUE)
+
 # }}}
 # }}}
 

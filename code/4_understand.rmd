@@ -1,15 +1,19 @@
 ---
 title: "Heart Rate Variability and Psychosocial Stress"
 subtitle: "An Atherosclerotic Risk in Communities Study"
-author: "Anish Shah, MD"
+author: 
+- Anish Shah, MD^[Department of Medicine, School of Medicine, Emory University]
+- Amit Shah, MD, MSCR^[Department of Epidemiology, Rollins School of Public Health, Emory University]
 data: "`r format(Sys.time(), '%B %d, %Y')`"
 fontsize: 10pt
 bibliography: hrv.bib
 csl: american-medical-association.csl
 link-citations: yes
 output: 
-  tufte::tufte_handout:
-    latex_engine: xelatex
+  beamer_presentation:
+    colortheme: "beaver"
+    slide_level: 3
+  latex_engine: xelatex
 header-includes:
   - \usepackage{dcolumn}
   - \usepackage{float}
@@ -18,9 +22,7 @@ editor_options:
 ---
 
 ```{r setup, global_options, include=FALSE}
-library(tufte)
 # invalidate cache when the tufte version changes
-knitr::opts_chunk$set(tidy = FALSE, cache.extra = packageVersion('tufte'))
 knitr::opts_chunk$set(
   cache = TRUE,
   warning = FALSE,
@@ -32,9 +34,10 @@ knitr::opts_chunk$set(
   dev = "png",
   options("scipen" = 0, "digits" = 3),
   tinytex.verbose = TRUE,
-  tidy = FALSE, 
-  cache.extra = packageVersion('tufte')
+  tidy = FALSE
 )
+
+options(xtable.comment = FALSE)
 ```
 
 ```{r, include=FALSE}
@@ -49,62 +52,51 @@ source("2_intake.R")
 source("3_tidy.R")
 ```
 
+# Overview
 
-# OVERVIEW
-
-## Disclosures and Funding
+### Disclosures and Funding
 
 - Emory University
 - Atherosclerosis Risk in Communities Study
 - No conflicts of interest
 
-## Atherosclerosis Risk in Communities Study
+### Atherosclerosis Risk in Communities Study
 
 The ARIC study is a prospective epidemiologic study designed to investigate atherosclerosis and its clinical outcomes by cardiovascular risk factors, diseases, and demographics. It involved longitudinal follow-up over five visits from 1987 to 2013, with outcomes updated as of 2015, with over 15k initial participants. It collected measures of psychosocial stress (increased anger, increased vital exhaustion, decreased social support) and HRV over time.
 
-## Background
+### Background
 
-Psychosocial stressors, such as fatigue and vital exhaustion, are repeatedly shown to be associated independently with MACE.[@Appels1988; @Bogle2018] Stressors and depression are shown to correlate with lower HRV.[@Huang2018; @Vroege2012; @Shah2013] The relationship between autonomic dysfunction and psychosocial stressors is still being studied. ^[What is the interaction between HRV and psychosocial stressors?]
+Psychosocial stressors, such as fatigue and vital exhaustion, are repeatedly shown to be associated independently with MACE.[@Appels1988; @Bogle2018] Stressors and depression are shown to correlate with lower HRV.[@Huang2018; @Vroege2012; @Shah2013] The relationship between autonomic dysfunction and psychosocial stressors is still being studied. 
 
-## Purpose
+### Purpose
 
-Objectives:
-- Examine HRV at V1 and V4
-- Study cross-sectional relationship of stress with outcomes
-- Compare longitudinal pattern of anger from V2 and V4
-- Study effect of stress on HRV
-- Adjust for gender effect on HRV
+- Identify relationship of HRV at V1 to psychosocial states at V2
+- Identify relationship of psychosocial states at V2 with HRV at V4 (cross-lagged analysis)
+- Control for influence of gender on HRV measures
+- Identify longitudinal relationship of anger on HRV
 
-Hypothesis:
+# Description of data 
 
-- Increased stress will associate with lower HRV
-- Changes in anger will associate with proportional changes in HRV
-- Gender will significantly interact with the stress and HRV
-  
-## Methods
+## HRV considerations
 
-- Description tables
+### Heart rate
 
-# HRV description
+Heart rate and variability interact, more so mathematically than clinically, and such, can be done mathematically before they are interpreted.[@Sacha2014a] 
 
-## Vist 1 HRV measures {.allowframebreaks}
+- geometric domains are divided by RR in seconds
+- frequency domains are divided by RR^2 in seconds
+
+### Gender
+
+Gender differences in HRV exist, with differences in their prognostic/clinical value.[@Sacha2014a] Its been suggested that in women, LF/HF is lower, HF is higher, LF is lower, VLF is lower, and SDNN is lower.[@Koenig2016] We believe these two groups should be analyzed separately as the mechanism is still unknown.
 
 ```{r, results='asis', include=FALSE}
-# Data
+# Table for V1
 df <- inner_join(hrv1, cs1, by = "ID") %>% na.omit()
-
-# Corrected HRV
-char_hrv_v1 <- tabular( (n=1) + Format(digits = 2)*(LF_HF + HFc + LFc + VLFc + TPc + SDNNc + RMSSDc)*(mean) ~ (GENDER + HTN + CHD + DIABETES), data = df )
-
-char_hrv_v1 %>%
-  as.matrix() %>%
-  xtable(., caption = "Visit 1 HRV measures") %>%
-  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\scriptsize")
-
-# Comparison between comorbid conditions and corrected HRV
-# GENDER
-df %>%
-  select(ID, HFc, LFc, VLFc, TPc, LF_HF, SDNNc, RMSSDc, GENDER) %>%
+tabular( (n=1) + Format(digits = 2)*(LF_HF + HFc + LFc + VLFc + TPc + SDNNc + RMSSDc)*(mean + sd) ~ (GENDER), data = df )
+tmp_v1 <- 
+  df %>%
+  dplyr::select(ID, HFc, LFc, VLFc, TPc, LF_HF, SDNNc, RMSSDc, PNN50, GENDER) %>%
   gather(key = hrv, value = value, -ID, -GENDER) %>%
   group_by(GENDER, hrv) %>%
   summarise(value = list(value)) %>%
@@ -113,81 +105,12 @@ df %>%
   mutate(p.value = t.test(unlist(Female), unlist(Male))$p.value,
          t.value = t.test(unlist(Female), unlist(Male))$statistic)
 
-# HTN
-df %>%
-  select(ID, HFc, LFc, VLFc, TPc, LF_HF, SDNNc, RMSSDc, HTN) %>%
-  gather(key = hrv, value = value, -ID, -HTN) %>%
-  group_by(HTN, hrv) %>%
-  summarise(value = list(value)) %>%
-  spread(HTN, value) %>%
-  group_by(hrv) %>%
-  mutate(p.value = t.test(unlist(`0`), unlist(`1`))$p.value,
-         t.value = t.test(unlist(`0`), unlist(`1`))$statistic)
-
-# CHD
-df %>%
-  select(ID, HFc, LFc, VLFc, TPc, LF_HF, SDNNc, RMSSDc, CHD) %>%
-  gather(key = hrv, value = value, -ID, -CHD) %>%
-  group_by(CHD, hrv) %>%
-  summarise(value = list(value)) %>%
-  spread(CHD, value) %>%
-  group_by(hrv) %>%
-  mutate(p.value = t.test(unlist(`0`), unlist(`1`))$p.value,
-         t.value = t.test(unlist(`0`), unlist(`1`))$statistic)
-
-# DIABETES
-df %>%
-  select(ID, HFc, LFc, VLFc, TPc, LF_HF, SDNNc, RMSSDc, DIABETES) %>%
-  gather(key = hrv, value = value, -ID, -DIABETES) %>%
-  group_by(DIABETES, hrv) %>%
-  summarise(value = list(value)) %>%
-  spread(DIABETES, value) %>%
-  group_by(hrv) %>%
-  mutate(p.value = t.test(unlist(`0`), unlist(`1`))$p.value,
-         t.value = t.test(unlist(`0`), unlist(`1`))$statistic)
-
-```
-
-```{r, results='asis'}
-# Visualize differences
-# Statistical differences seen at LF_HF **, LF *, SDNN *, VLF * (no difference in HF)
-df %>%
-  select(ID, HFc, LFc, VLFc, TPc, LF_HF, SDNNc, RMSSDc, GENDER) %>%
-  gather(key = hrv, value = value, -ID, -GENDER) %>%
-  ggplot(data = ., aes(x = hrv, y = value, fill = GENDER)) +
-  geom_boxplot(position = "dodge") + 
-  scale_fill_viridis(option = "cividis", discrete = TRUE) +
-  theme_minimal() +
-  scale_y_log10() +
-  annotate("text", x = 2, y = 1e-3, label = "**") + # LF_HF
-  annotate("text", x = 3, y = 1e-3, label = "*") + # LF
-  annotate("text", x = 5, y = 1e-3, label = "*") + # SDNN
-  annotate("text", x = 7, y = 1e-3, label = "*") + # VLF (only measured for 2 minutes at V1)
-  labs(
-    title = "HRV by Gender at V1",
-    x = "HRV measures",
-    y = "Mean values"
-  )
-```
-
-## Visit 4 HRV measures {.allowframebreaks}
-
-```{r, results='asis', include=FALSE}
-# Data
-df <- inner_join(hrv4, cs4, by = "ID") %>% inner_join(., cs1[c("GENDER", "ID")], by = "ID") %>% na.omit
-
-# Corrected HRV
-char_hrv_v4 <- tabular( (n=1) + Format(digits = 2)*(LF_HF + HFc + LFc + VLFc + TPc + SDNNc + RMSSDc)*(mean) ~ (GENDER + HTN + CHD + DIABETES), data = df )
-
-char_hrv_v4 %>%
-  as.matrix() %>%
-  xtable(., caption = "Visit 4 HRV measures") %>%
-  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\scriptsize")
-
-# Comparison between comorbid conditions and corrected HRV
-# GENDER
-df %>%
-  select(ID, HFc, LFc, VLFc, TPc, LF_HF, SDNNc, RMSSDc, GENDER) %>%
+# Table for V4
+df <- inner_join(hrv4, cs4, by = "ID") %>% inner_join(., cs1[c("ID", "GENDER")]) %>% na.omit()
+tabular( (n=1) + Format(digits = 2)*(LF_HF + HFc + LFc + VLFc + TPc + SDNNc + RMSSDc)*(mean + sd) ~ (GENDER), data = df )
+tmp_v4 <- 
+  df %>%
+  dplyr::select(ID, HFc, LFc, VLFc, TPc, LF_HF, SDNNc, RMSSDc, PNN50, GENDER) %>%
   gather(key = hrv, value = value, -ID, -GENDER) %>%
   group_by(GENDER, hrv) %>%
   summarise(value = list(value)) %>%
@@ -195,309 +118,77 @@ df %>%
   group_by(hrv) %>%
   mutate(p.value = t.test(unlist(Female), unlist(Male))$p.value,
          t.value = t.test(unlist(Female), unlist(Male))$statistic)
-
-# HTN
-df %>%
-  select(ID, HFc, LFc, VLFc, TPc, LF_HF, SDNNc, RMSSDc, HTN) %>%
-  gather(key = hrv, value = value, -ID, -HTN) %>%
-  group_by(HTN, hrv) %>%
-  summarise(value = list(value)) %>%
-  spread(HTN, value) %>%
-  group_by(hrv) %>%
-  mutate(p.value = t.test(unlist(`0`), unlist(`1`))$p.value,
-         t.value = t.test(unlist(`0`), unlist(`1`))$statistic)
-
-# CHD
-df %>%
-  select(ID, HFc, LFc, VLFc, TPc, LF_HF, SDNNc, RMSSDc, CHD) %>%
-  gather(key = hrv, value = value, -ID, -CHD) %>%
-  group_by(CHD, hrv) %>%
-  summarise(value = list(value)) %>%
-  spread(CHD, value) %>%
-  group_by(hrv) %>%
-  mutate(p.value = t.test(unlist(`0`), unlist(`1`))$p.value,
-         t.value = t.test(unlist(`0`), unlist(`1`))$statistic)
-
-# DIABETES
-df %>%
-  select(ID, HFc, LFc, VLFc, TPc, LF_HF, SDNNc, RMSSDc, DIABETES) %>%
-  gather(key = hrv, value = value, -ID, -DIABETES) %>%
-  group_by(DIABETES, hrv) %>%
-  summarise(value = list(value)) %>%
-  spread(DIABETES, value) %>%
-  group_by(hrv) %>%
-  mutate(p.value = t.test(unlist(`0`), unlist(`1`))$p.value,
-         t.value = t.test(unlist(`0`), unlist(`1`))$statistic)
-
 ```
 
-```{r, results='asis'}
-# Visualize differences
-# Statistical differences seen at LF_HF **, LF *, SDNN **, VLF ** (no difference in HF)
-df %>%
-  select(ID, HFc, LFc, VLFc, TPc, LF_HF, SDNNc, RMSSDc, GENDER) %>%
-  gather(key = hrv, value = value, -ID, -GENDER) %>%
-  ggplot(data = ., aes(x = hrv, y = value, fill = GENDER)) +
-  geom_boxplot(position = "dodge") + 
-  scale_fill_viridis(option = "cividis", discrete = TRUE) +
-  theme_minimal() +
-  scale_y_log10() +
-  annotate("text", x = 2, y = 1e-3, label = "**") + # LF_HF
-  annotate("text", x = 3, y = 1e-3, label = "*") + # LF
-  annotate("text", x = 5, y = 1e-3, label = "**") + # SDNN
-  annotate("text", x = 7, y = 1e-3, label = "**") + # VLF
-  labs(
-    title = "HRV by Gender at V4",
-    x = "HRV measures",
-    y = "Mean values"
-  )
-  
-```
+After correction for HR, we found that in both V1 (n=`r length(cs1$ID)`) and V4 (n=`r length(cs4$ID)`), the following differences in similar magnitude:
 
-# Stress description
+- HF (p=`r tmp_v4$p.value[tmp_v4$hrv == "HFc"]`]) contrary to prior studies[@Koenig2016]
+- LF (p=$`r tmp_v4$p.value[tmp_v4$hrv == "LFc"]`$) 
+- VLF (p=$`r tmp_v4$p.value[tmp_v4$hrv == "VLFc"]`$) ECG were 2m at V1, 5m at V4
+- LF/HF (p=$`r tmp_v4$p.value[tmp_v4$hrv == "LF_HF"]`$) 
+- SDNN (p=$`r tmp_v4$p.value[tmp_v4$hrv == "SDNNc"]`$)
+- PNN50 (p=$`r tmp_v4$p.value[tmp_v4$hrv == "PNN50c"]`$)
 
-## Visit 2 Stress and measures {.allowframebreaks}
+### HRV measures at V1
 
-```{r, results='asis', include = FALSE}
-# Data
-df <- inner_join(scores, cs2, by = "ID") %>% inner_join(., cs1[c("GENDER", "ID")], by = "ID") %>% na.omit
+```{r}
+# For males and females
+tmp <- bind_rows(z_hrv1_male, z_hrv1_female)
 
-# Social support, exhaustion, and anger stressors
-char_stress_v2 <- tabular( (n=1) + Format(digits = 2)*(ISEL +  AP + TA + BE + SE + LSNS + MAASTRICHT + SPIELBERGER)*(mean) ~ (GENDER + HTN + CHD + DIABETES), data = df )
-
-char_stress_v2 %>%
-  as.matrix() %>%
-  xtable(., caption = "Visit 1 HRV measures") %>%
-  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\scriptsize")
-
-# Compare stress markers, significant difference between gender 
-# P value c- Bonferroni correction for interpretation
-df %>% 
-  select(ID, ISEL, LSNS, AP, TA, BE, SE, MAASTRICHT, SPIELBERGER, GENDER) %>%
-  gather(key = stress, value = value, -ID, -GENDER) %>%
-  group_by(GENDER, stress) %>%
-  summarise(value = list(value)) %>%
-  spread(GENDER, value) %>%
-  group_by(stress) %>%
-  mutate(p.value = t.test(unlist(Female), unlist(Male))$p.value,
-         t.value = t.test(unlist(Female), unlist(Male))$statistic)
-
-# Compare all comorbid conditions 
-# HTN
-df %>% 
-  select(ID, ISEL, LSNS, AP, TA, BE, SE, MAASTRICHT, SPIELBERGER, HTN) %>%
-  gather(key = stress, value = value, -ID, -HTN) %>%
-  group_by(HTN, stress) %>%
-  summarise(value = list(value)) %>%
-  spread(HTN, value) %>%
-  group_by(stress) %>%
-  mutate(p.value = t.test(unlist(`0`), unlist(`1`))$p.value,
-         t.value = t.test(unlist(`0`), unlist(`1`))$statistic)
-
-# CHD
-df %>% 
-  select(ID, ISEL, LSNS, AP, TA, BE, SE, MAASTRICHT, SPIELBERGER, CHD) %>%
-  gather(key = stress, value = value, -ID, -CHD) %>%
-  group_by(CHD, stress) %>%
-  summarise(value = list(value)) %>%
-  spread(CHD, value) %>%
-  group_by(stress) %>%
-  mutate(p.value = t.test(unlist(`0`), unlist(`1`))$p.value,
-         t.value = t.test(unlist(`0`), unlist(`1`))$statistic)
-
-# DIABETES
-df %>% 
-  select(ID, ISEL, LSNS, AP, TA, BE, SE, MAASTRICHT, SPIELBERGER, DIABETES) %>%
-  gather(key = stress, value = value, -ID, -DIABETES) %>%
-  group_by(DIABETES, stress) %>%
-  summarise(value = list(value)) %>%
-  spread(DIABETES, value) %>%
-  group_by(stress) %>%
-  mutate(p.value = t.test(unlist(`0`), unlist(`1`))$p.value,
-         t.value = t.test(unlist(`0`), unlist(`1`))$statistic)
-
-# STROKE
-df %>% 
-  select(ID, ISEL, LSNS, AP, TA, BE, SE, MAASTRICHT, SPIELBERGER, STROKE) %>%
-  gather(key = stress, value = value, -ID, -STROKE) %>%
-  group_by(STROKE, stress) %>%
-  summarise(value = list(value)) %>%
-  spread(STROKE, value) %>%
-  group_by(stress) %>%
-  mutate(p.value = t.test(unlist(`0`), unlist(`1`))$p.value,
-         t.value = t.test(unlist(`0`), unlist(`1`))$statistic)
-
-# Maastricht, TA, AP were consistently strongest differences b/w comorbid conditions.
-```
-
-```{r, results='asis'}
-# Visualize differences
-# Maastricht **, Spielberger *, AP *, SE *, TA ** (no difference in social support or overall ISEL)
-df %>%
-  select(ID, ISEL, LSNS, AP, TA, BE, SE, MAASTRICHT, SPIELBERGER, GENDER) %>%
-  gather(key = stress, value = value, -ID, -GENDER) %>%
-  ggplot(data = ., aes(x = stress, y = value, fill = GENDER)) +
-  scale_y_log10() +
-  geom_boxplot(position = "dodge") + 
-  scale_fill_viridis(option = "cividis", discrete = TRUE) +
-  theme_minimal() +
-  annotate("text", x = 5, y = 5e-1, label = "**") + # Maastricht
-  annotate("text", x = 7, y = 5e-1, label = "*") + # Spielberger
-  annotate("text", x = 6, y = 5e-1, label = "*") + # SE
-  annotate("text", x = 1, y = 5e-1, label = "*") + # AP
-  annotate("text", x = 8, y = 5e-1, label = "**") + # TA
-  labs(
-    title = "Stress by Gender at V2",
-    x = "Stress measures",
-    y = "Mean values"
-  )
-
-```
-
-## Visit 4 Stress measures
-
-```{r, results='asis'}
-# Data
-df <- inner_join(score_hpc4, cs4, by = "ID") %>% inner_join(., cs1[c("GENDER", "ID")], by = "ID") %>% na.omit
-
-# Anger stressors
-char_stress_v4 <- tabular( (n=1) + Format(digits = 2)*(SPIELBERGER + anger_level)*(mean) ~ (GENDER + HTN + CHD + DIABETES), data = df )
-
-char_stress_v4 %>%
-  as.matrix() %>%
-  xtable(., caption = "Visit 4 stress measures") %>%
-  print(., include.rownames = FALSE, include.colnames = FALSE, caption.placement = "top", size = "\\scriptsize")
-```
-
-### Longitudinal anger comparison {.allowframebreaks}
-
-```{r, results='asis'}
-# Data
-df <- inner_join(score_hpc4, score_hpc2, by = "ID") %>% na.omit
-names(df) <- c("ID", "SPIELBERGER_v2", "anger_level_v2", "SPIELBERGER_v4", "anger_level_v4")
-
-# Longitudinal impression of anger
-char_stress_longitudinal <- tabular( (n=1) ~ Format(digits = 2) * (SPIELBERGER_v2 + anger_level_v2 + SPIELBERGER_v4 + anger_level_v4) * (mean), data = df)
-
-# Comparison of groups overtime, paired t.test (statistically different).
-tmp <- t.test(x = df$SPIELBERGER_v2, y = df$SPIELBERGER_v4, paired = TRUE, data = df)
-
-# Visualization
-ggplot(data = gather(df[c(1,2,4)], stress, value, -ID), aes(x = value, fill = stress)) + 
-  geom_density(position = "identity") + 
-  scale_fill_viridis(option="cividis", discrete=TRUE, alpha=.5) + 
-  theme_minimal() +
-  labs(
-    title = "Anger scores at V2 and V4",
-    x = "Spielberger anger score",
-    y = "Frequency"
-  ) +
-  annotate("text", label = "Sig diff b/w means", x = 25, y = 0.1)
-```
-
-
-# RELATIONSHIPS
-
-## HRV from V1 to Stress at V2^[Does HRV predict stress levels in the future?]
-
-```{r, include = FALSE}
-# Data in wide, to be used for all stressors
+# Create SEM
 df <-
-  hrv1 %>%
-  inner_join(scores, ., by = "ID") %>%
-  inner_join(cs1, ., by = "ID") %>%
-  na.omit()
+  cs1[c("ID", "HTN", "CHD", "DIABETES", "GENDER")] %>%
+  gather(key = covar, value = status, -ID, -GENDER) %>%
+  inner_join(gather(data = tmp[-3], key = hrv, value = value, -ID), ., by = "ID") %>%
+  group_by(GENDER, covar, status, hrv) %>%
+  na.omit() %>%
+  summarise(mean = mean(value), n = length(value), sd = sd(value), se = sd(value) / sqrt(length(value)))
 
-### ISEL
-
-# Stepwise regression, using MASS package
-full_model <- glm(ISEL ~ AGE_V1 + BMI + RACE + DRINKER + SMOKER + HTN + CHD + DIABETES + HFc + LFc + VLFc + TPc + LF_HF + SDNNc + RMSSDc + PNN50, data = df)
-step_model_ISEL <- stepAIC(full_model, direction = "both", trace = TRUE)
-# Final model ... sig with smoking, LF, and Diabetes, and TP
-
-### AP
-
-# Stepwise regression, using MASS package
-full_model <- glm(AP ~ AGE_V1 + BMI + RACE + DRINKER + SMOKER + HTN + CHD + DIABETES + HFc + LFc + VLFc + TPc + LF_HF + SDNNc + RMSSDc + PNN50, data = df)
-step_model_AP <- stepAIC(full_model, direction = "both", trace = TRUE)
-# Final model... sig = BMI, drinking, smoking, HTN, HF, LF, TP
-# Diabetes and race were also included
-
-
-### TA
-
-# Stepwise regression, using MASS package
-full_model <- glm(TA ~ AGE_V1 + BMI + RACE + DRINKER + SMOKER + HTN + CHD + DIABETES + HFc + LFc + VLFc + TPc + LF_HF + SDNNc + RMSSDc + PNN50, data = df)
-step_model_TA <- stepAIC(full_model, direction = "both", trace = TRUE)
-# Final model... sig = Age, Smoking, HTN, CHD, DM, LF_HF
-
-
-### BE
-
-# Stepwise regression, using MASS package
-full_model <- glm(BE ~ AGE_V1 + BMI + RACE + DRINKER + SMOKER + HTN + CHD + DIABETES + HFc + LFc + VLFc + TPc + LF_HF + SDNNc + RMSSDc + PNN50, data = df)
-step_model_BE <- stepAIC(full_model, direction = "both", trace = TRUE)
-# Final model... sig = BMI, Smoking, HTN, DM, LF_HF
-
-### SE
-
-# Stepwise regression, using MASS package
-full_model <- glm(SE ~ AGE_V1 + BMI + RACE + DRINKER + SMOKER + HTN + CHD + DIABETES + HFc + LFc + VLFc + TPc + LF_HF + SDNNc + RMSSDc + PNN50, data = df)
-step_model_SE <- stepAIC(full_model, direction = "both", trace = TRUE)
-# Final model ... sig = race, drinking, HTN... no HRV measure mattered
-
-### LSNS
-
-# Stepwise regression, using MASS package
-full_model <- glm(LSNS ~ AGE_V1 + BMI + RACE + DRINKER + SMOKER + HTN + CHD + DIABETES + HFc + LFc + VLFc + TPc + LF_HF + SDNNc + RMSSDc + PNN50, data = df)
-step_model_LSNS <- stepAIC(full_model, direction = "both", trace = TRUE)
-# Final model ... sig = BMI, Smoking, DM, LF, TP, HTN
-
-### MAASTRICHT
-
-# Stepwise regression, using MASS package
-full_model <- glm(MAASTRICHT ~ AGE_V1 + BMI + RACE + DRINKER + SMOKER + HTN + CHD + DIABETES + HFc + LFc + VLFc + TPc + LF_HF + SDNNc + RMSSDc + PNN50, data = df)
-step_model_MAASTRICHT <- stepAIC(full_model, direction = "both", trace = TRUE)
-
-# Final model ... sig = BMI, DRINKER, smoking, HTN, CHD, DM, HF, LF_HF, SDNN, PNN50
-
-### SPIELBERGER
-# Stepwise regression, using MASS package
-full_model <- glm(SPIELBERGER ~ AGE_V1 + BMI + RACE + DRINKER + SMOKER + HTN + CHD + DIABETES + HFc + LFc + VLFc + TPc + LF_HF + SDNNc + RMSSDc + PNN50, data = df)
-step_model_SPIELBERGER <- stepAIC(full_model, direction = "both", trace = TRUE, k = 2)
-
-# Final model ... sig = Age, BMI, race, drinker, smoker, CHD, HF, LF
+# Visualize
+ggplot(df, aes(x=hrv, colour=hrv, shape = status)) + 
+  facet_wrap(GENDER ~ covar) +  
+  geom_point(aes(y = mean), size=3, position=position_dodge(0.3)) +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2, position=position_dodge(0.3)) +
+  theme_minimal() +
+  scale_colour_viridis(option = "cividis", discrete = TRUE, begin = 0.1, end = 0.9) +
+  scale_fill_viridis(option = "inferno", discrete = TRUE, begin = 0.1, end = 0.9) +
+  labs(
+    title = "Overview of HRV at Visit 1 by gender",
+    x = "HRV measure", 
+    y = "Z-score [SEM]"
+  )
 ```
 
-## Fitting regression models
+### HRV measures at V4
 
-```{r, results='asis'}
-# Models are all collected after stepwise regression
-stargazer(step_model_ISEL, 
-          step_model_AP, 
-          step_model_TA, 
-          step_model_BE, 
-          step_model_LSNS, 
-          step_model_MAASTRICHT, 
-          step_model_SPIELBERGER, 
-          type = "latex",
-          font.size = "scriptsize",
-          column.sep.width = "0pt",
-          single.row = TRUE,
-          float = TRUE,
-          table.placement = "H",
-          title = "LM fits for Stress ~ HRV + Covar",
-          align = TRUE,
-          p.auto = FALSE,
-          report = "vc*",
-          digits = 2,
-          model.numbers = FALSE,
-          no.space = TRUE,
-          omit = c("Constant", "RACEUnknown", "DRINKERUnknown", "SMOKERUnknown")
-          )
+```{r}
+# For males and females
+tmp <- bind_rows(z_hrv4_male, z_hrv4_female)
+
+# Create SEM
+df <-
+  cs4[c("ID", "HTN", "CHD", "DIABETES")] %>%
+  inner_join(cs1[c("ID", "GENDER")], ., by = "ID") %>%
+  gather(key = covar, value = status, -ID, -GENDER) %>%
+  inner_join(gather(data = tmp[-3], key = hrv, value = value, -ID), ., by = "ID") %>%
+  group_by(GENDER, covar, status, hrv) %>%
+  na.omit() %>%
+  summarise(mean = mean(value), n = length(value), sd = sd(value), se = sd(value) / sqrt(length(value)))
+
+# Visualize
+ggplot(df, aes(x=hrv, colour=hrv, shape = status)) + 
+  facet_wrap(GENDER ~ covar) +  
+  geom_point(aes(y = mean), size=3, position=position_dodge(0.3)) +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2, position=position_dodge(0.3)) +
+  theme_minimal() +
+  scale_colour_viridis(option = "cividis", discrete = TRUE, begin = 0.1, end = 0.9) +
+  scale_fill_viridis(option = "inferno", discrete = TRUE, begin = 0.1, end = 0.9) +
+  labs(
+    title = "Overview of HRV at Visit 4 by gender",
+    x = "HRV measure", 
+    y = "Z-score [SEM]"
+  )
 ```
-
-
 # CONCLUSION 
 
-## References
+### References {.allowframebreaks}
