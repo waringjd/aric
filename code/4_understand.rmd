@@ -189,6 +189,7 @@ ggplot(df, aes(x=hrv, colour=hrv, shape = status)) +
     y = "Z-score [SEM]"
   )
 ```
+
 # CONCLUSION 
 
 ### References {.allowframebreaks}
