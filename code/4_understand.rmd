@@ -7,7 +7,7 @@ author:
 data: "`r format(Sys.time(), '%B %d, %Y')`"
 fontsize: 10pt
 bibliography: hrv.bib
-csl: american-medical-association.csl
+csl: apa.csl
 link-citations: yes
 output: 
   beamer_presentation:
@@ -120,14 +120,14 @@ tmp_v4 <-
          t.value = t.test(unlist(Female), unlist(Male))$statistic)
 ```
 
-After correction for HR, we found that in both V1 (n=`r length(cs1$ID)`) and V4 (n=`r length(cs4$ID)`), the following differences in similar magnitude:
+After correction for HR, we found that in both V1 (n=`r length(cs1$ID)`) and V4 (n=`r length(cs4$ID)`), the following differences by gender of similar magnitude at both time points:
 
-- HF (p=`r tmp_v4$p.value[tmp_v4$hrv == "HFc"]`]) contrary to prior studies[@Koenig2016]
+- HF (p=`r tmp_v4$p.value[tmp_v4$hrv == "HFc"]`) contrary to prior studies [@Koenig2016]
 - LF (p=$`r tmp_v4$p.value[tmp_v4$hrv == "LFc"]`$) 
 - VLF (p=$`r tmp_v4$p.value[tmp_v4$hrv == "VLFc"]`$) ECG were 2m at V1, 5m at V4
 - LF/HF (p=$`r tmp_v4$p.value[tmp_v4$hrv == "LF_HF"]`$) 
 - SDNN (p=$`r tmp_v4$p.value[tmp_v4$hrv == "SDNNc"]`$)
-- PNN50 (p=$`r tmp_v4$p.value[tmp_v4$hrv == "PNN50c"]`$)
+- PNN50 (p=$`r tmp_v4$p.value[tmp_v4$hrv == "PNN50"]`$)
 
 ### HRV measures at V1
 
@@ -153,7 +153,7 @@ ggplot(df, aes(x=hrv, colour=hrv, shape = status)) +
   scale_colour_viridis(option = "cividis", discrete = TRUE, begin = 0.1, end = 0.9) +
   scale_fill_viridis(option = "inferno", discrete = TRUE, begin = 0.1, end = 0.9) +
   labs(
-    title = "Overview of HRV at Visit 1 by gender",
+    title = "Overview of HRV at Visit 1 by gender and covariates",
     x = "HRV measure", 
     y = "Z-score [SEM]"
   )
@@ -184,12 +184,69 @@ ggplot(df, aes(x=hrv, colour=hrv, shape = status)) +
   scale_colour_viridis(option = "cividis", discrete = TRUE, begin = 0.1, end = 0.9) +
   scale_fill_viridis(option = "inferno", discrete = TRUE, begin = 0.1, end = 0.9) +
   labs(
-    title = "Overview of HRV at Visit 4 by gender",
+    title = "Overview of HRV at Visit 4 by gender and covariates",
     x = "HRV measure", 
     y = "Z-score [SEM]"
   )
 ```
 
-# CONCLUSION 
+## Psychosocial considerations
+### Measured psychosocial stressors
+
+Psychosocial stress has an impact on outcomes, and increases the risk of sudden death, potentially through sympathovagal imbalance and decreasing the ventricular threshold.[@Greene1972; @Lown1973; @Rahe1973]
+
+- **Interpersonal Support Evaluation List** (ISEL) - higher score is more supportive, broken into subsections of Appraisal, Tangible, Belonging, Self-Esteem traits
+- **Lubben Social Network Scale** (LSNS) - higher score has larger social network
+- **Maastricht Vital Exhaustion Questionnaire** - increased score has higher exhaustion and *higher mortality* [@Bogle2018; @Williams2010]
+- **Spielberger Anger Trait Scale** - higher score has increased anger
+
+### Distribution of psychosocial stressors at V2
+
+Summary of psychosocial scales.
+
+```{r, results='asis'}
+# Data
+df <- inner_join(scores, cs2, by = "ID") %>% na.omit()
+
+tabular(Format(digits = 3)*(ISEL + LSNS + MAASTRICHT + SPIELBERGER) ~ (median + mean + sd + var + min + max), data = df) %>% latex()
+```
+
+Breakdown including comorbidities, of note, Maastricht shows the most differences.
+
+```{r, results='asis'}
+# Data
+df <- inner_join(scores, cs2, by = "ID") %>% na.omit()
+
+# Distribution of mean scores
+tabular( Format(digits=2)*(ISEL + LSNS + MAASTRICHT + SPIELBERGER)*mean ~ (n=1) + HTN + CHD + DIABETES, data = df) %>% latex()
+```
+
+
+
+
+
+# Anger
+## Anger over time
+### Correlation between V2 and V4
+
+```{r}
+# Data is from visit 2 and visit 4
+df <-
+  inner_join(cs1[c("ID","GENDER")], score_hpc2[1:2], by = "ID") %>%
+  inner_join(., score_hpc4[1:2], by = "ID") %>%
+  na.omit()
+names(df) <- c("ID", "GENDER", "V2", "V4")
+
+# Paired t-test
+t_anger <- t.test(df$V2, df$V4, paired = TRUE, alternative = "two.sided")
+
+
+
+```
+
+
+# Vital exhaustion
+# Social support
+# Conclusion
 
 ### References {.allowframebreaks}
